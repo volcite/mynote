@@ -159,10 +159,10 @@ if [ "$USE_TMUX" = true ] && command -v tmux &> /dev/null; then
       if [ -n "$EXISTING_URL" ]; then
         LOG_FILE="$EXISTING_LOG"
         json_success "$EXISTING_URL"
-        echo "" >&2
-        echo "=== Remote Control URL ===" >&2
-        echo "$EXISTING_URL" >&2
-        echo "==========================" >&2
+        echo ""
+        echo "=== Remote Control URL ==="
+        echo "$EXISTING_URL"
+        echo "=========================="
         exit 0
       fi
     fi
@@ -214,10 +214,10 @@ for i in $(seq 1 "$TIMEOUT"); do
     if [ -n "$URL" ]; then
       log "URL found after ${i}s"
       json_success "$URL"
-      echo "" >&2
-      echo "=== Remote Control URL ===" >&2
-      echo "$URL" >&2
-      echo "==========================" >&2
+      echo ""
+      echo "=== Remote Control URL ==="
+      echo "$URL"
+      echo "=========================="
       exit 0
     fi
 
