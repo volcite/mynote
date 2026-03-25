@@ -1,0 +1,778 @@
+{
+  "name": "動画からnoteと告知文章をスプシに出力する",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "0e09a57a-8aa6-49df-b873-20a62a69b95d",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "inputType": "binary"
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "bde09ae0-b68c-48f8-ab05-dda0cec22033",
+      "name": "Upload a file",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "audioUrls": "={{ $json.fileUri }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        576,
+        0
+      ],
+      "id": "c37c8d3b-a92a-4840-a230-a622cf643b66",
+      "name": "文字起こし",
+      "retryOnFail": true,
+      "executeOnce": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.output.split(\",\")[0] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "https://drive.google.com/drive/u/1/folders/1z4c2HogVC7dsOuE14DyZ6ZY-gZZ777Pi",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1072,
+        0
+      ],
+      "id": "eb12252a-8f3b-48fa-8a65-bbcd2eaf0f06",
+      "name": "Create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "itemcontent.parts[0].text, item",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        416
+      ],
+      "id": "a6c3718d-3015-45ed-9975-392f074cbc38",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { item: $('AI Agent').item.json.output.split(\",\") } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "eb03570e-39d9-4724-be5c-f2cd55e32c98",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "文字起こし",
+        "height": 368,
+        "width": 800
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -80,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "9d65b438-501e-473c-9fec-5b6ad2b17b06",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "目次作成",
+        "height": 368,
+        "width": 656,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "9971aa43-1f86-4b25-ba99-b4de166c0556",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "画像生成",
+        "height": 336,
+        "width": 1232,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -80,
+        336
+      ],
+      "typeVersion": 1,
+      "id": "4b2e8db3-510f-42e1-a288-5e0501889c0c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        160,
+        416
+      ],
+      "id": "4f3f5783-f846-4819-95dd-c51484151421",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        976,
+        432
+      ],
+      "id": "326dcc6d-f2e1-4fc4-8a3b-0791ef424b67",
+      "name": "Wait",
+      "webhookId": "25b02265-fd7e-48db-96a9-83293eeccec6"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Loop Over Items').item.json.item }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        800,
+        432
+      ],
+      "id": "0a06ef7b-49fe-4949-9a32-f6302843dd88",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        880
+      ],
+      "id": "b660b6f2-d4dd-4047-8d54-33a9272c4af6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=【note告知文 作成プロンプト】\nあなたは、読者の興味を引きつけ、クリックを促すプロのSNSコピーライターです。\n以下の#制約条件と#入力情報を基に、note記事へのアクセスを最大化するための告知文章を作成してください\n\n#制約条件\n - 読者の注意を引く、キャッチーな書き出しで始めてください。\n - 記事のテーマと、それが読者にとってなぜ重要なのかを簡潔に提示してください。\n - 記事の本文から、最も興味を引く部分を一部引用または要約して「チラ見せ」してください。\n - その「チラ見せ」した部分の重要性や、それが何を意味するのかを軽く解説し、読者の知的好奇心を刺激してください。\n - 読者が「その先が知りたい！」と思うように、「しかし、本当に重要なポイントは...」「このテクニックの全貌は...」といった言葉で、note記事への期待感を高めてください。\n - 記事の結論や最も重要なノウハウは告知文に含めず、noteで明かす構成にしてください。\n - 最後に、明確なCall to Action（行動喚起）として、note記事へのリンクを促す一文を加えてください。（例：「全文はこちらのnoteで」「続きはこちらから👇」）\n - 投稿文章だけテキスト形式で出力してください\n - 文字数は500文字から1000文字程度で作成してください\n - スマホで見やすいように、適宜改行を入れてください\n - 最初の１文は対象のユーザーが思っている常識を破壊するような内容にしてください。ただし嘘はダメです。\n\n#入力情報\nタイトル:\n{{ $('Edit Fields').item.json.item[0] }}\n本文:\n{{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        720
+      ],
+      "id": "d7c47ba9-7f15-46c1-9e3c-8fb7d7dfbbcc",
+      "name": "X投稿作成"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=あなたは優秀なライターです。私が添付した動画の文字起こしをもとに記事を作成してください。何も知らない初心者でも理解できるように、句構造文法の枠組みを用いて、理解しやすい文章を作成してください。内容は超具体的に書いて。また、自分の過去や体験談、考えなどを記載したものなら、その人が書いたかのように魅力的な文章に仕上げてください。出力は記事の内容だけをマークダウン形式で出力してください。目次は下記のものを使用してください。\n\n#記事構成\n　- リード文はセールスライティングを活用して読者の購読・購入意欲を掻き立てるよう意識\n   - 読者が思わず読み進めてしまうくらいキャッチーで魅力的な目次を作成\n   - 各セクションタイトルは読者の興味を引く工夫をする\n   - 【】や！などの記号を適度に使用し、緩急をつける\n   - 誇張表現は使用するが、虚偽の情報は避ける\n   - 具体的な数字を使用する際は、事実に基づいたものを使用\n\n#記事の特徴\n   - 初心者にもわかりやすい内容\n   - 読者が「脳汁を出す」ほど興奮する内容を目指す\n   - 禁断、極秘、魔法などの刺激的な表現を適度に使用\n\n#注意点\n    - 数字や成果の表現は事実に基づくこと\n    - 読者の興味を引きつつ、信頼性を損なわないバランスを保つ\n　- 2024年以降の最新情報のみを使う\n　- すべての情報を具体的に書く\n　- 分かりづらい部分は例えを用いて書く\n　- 「：」は記事内に使わないで\n　- タイトルは出力しないでください\n\n# 目次（「,」で区切っています。最初の一つ目がタイトルです。）\n{{ $('AI Agent').item.json.output }}\n\n# 文字起こし\n{{ $('文字起こし').item.json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        720
+      ],
+      "id": "97cc9426-508f-4f01-976c-ef09da0e07fc",
+      "name": "note作成"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=あなたは優秀なライターです。私が添付した動画の文字起こしをもとに記事の目次を作成してください。何も知らない初心者でも理解できるように、内容は超具体的に書いて。手順やhow to系なら記事としての完璧なマニュアルへと仕上げてください。出力は記事の目次だけを半角カンマ（,）区切りのテキストで出力してください。目次以外は出力しないでください。\n\n#記事構成\n   - 読者が思わず読み進めてしまうくらいキャッチーで魅力的な目次を作成\n   - 各セクションタイトルは読者の興味を引く工夫をする\n   - 誇張表現は使用するが、虚偽の情報は避ける\n   - 具体的な数字を使用する際は、事実に基づいたものを使用\n\n#記事の特徴\n   - 初心者にもわかりやすい内容\n   - 禁断、極秘、魔法などの刺激的な表現を適度に使用\n\n#注意点\n    - 数字や成果の表現は事実に基づくこと\n    - 読者の興味を引きつつ、信頼性を損なわないバランスを保つ\n　- 2024年以降の最新情報のみを使う\n　- すべての情報を具体的に書く\n　- 分かりづらい部分は例えを用いて書く\n\n# 出力例\n目次1,目次2,目次3,\n# 文字起こし\n {{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "40090ecb-92c5-4fee-b020-153423645658",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        160
+      ],
+      "id": "817f2da2-1827-4f91-8d74-5d894069791f",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        896
+      ],
+      "id": "664bf6db-3618-47e6-bc9a-bedcda6f9439",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1UcdAWblr6nnEGoC3oXj4K4hXFBHPLTkkKnTp55VCKJc",
+          "mode": "list",
+          "cachedResultName": "note記事一覧",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UcdAWblr6nnEGoC3oXj4K4hXFBHPLTkkKnTp55VCKJc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "シート1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UcdAWblr6nnEGoC3oXj4K4hXFBHPLTkkKnTp55VCKJc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "タイトル": "={{ $('Edit Fields').item.json.item[0] }}",
+            "本文": "={{ $('note作成').item.json.output }}",
+            "告知文": "={{ $json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "タイトル",
+              "displayName": "タイトル",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "本文",
+              "displayName": "本文",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "告知文",
+              "displayName": "告知文",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        800,
+        720
+      ],
+      "id": "ac7966a1-e6d8-4a90-9356-7a70e6af1ed7",
+      "name": "スプシにnoteとX投稿を記載",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1lfs7U_ZLD0vLpE2bVUiAqQr1EDUFVwEP",
+          "mode": "list",
+          "cachedResultName": "動画",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1lfs7U_ZLD0vLpE2bVUiAqQr1EDUFVwEP"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "0162c1db-1c71-4ce2-8ca5-b41458e80253",
+      "name": "FileCreateTrigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        0,
+        720
+      ],
+      "id": "e15deec4-c32d-4d88-972c-5e6f07f65697",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=なたは優秀な生成AI画像クリエイターかつ、目次の画像を作成したいです。\n\n下記目次を連想するキーワードを3つ選定して、そのキーワードにあう画像生成プロンプトを作成してください。英文プロンプトのみテキストで出力してください。\n\n\n\n# 手順\n\n- 目次を連想するキーワードを3つ選定する\n\n- そのキーワードにあう画像が出力されるプロンプトを作成する\n\n- 作成したプロンプトだけ出力する\n\n\n\n# 注意事項\n\n- キーワードは出力しないでください\n\n- ブログにふさわしい画像を出力するプロンプトにしてください\n\n\n\n# 出力形式\n\n英語プロンプトのみ\n\n\n\n# 目次\n {{ $json.item }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        352,
+        432
+      ],
+      "id": "7e8e2a8d-6fbc-4596-a962-40f8c8b4788e",
+      "name": "画像生成プロンプト作成",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.message.content }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        624,
+        432
+      ],
+      "id": "f01a6762-3773-43df-890e-9c1f882e5ba5",
+      "name": "画像生成",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "文字起こし",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文字起こし": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "画像生成プロンプト作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "note作成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "X投稿作成": {
+      "main": [
+        [
+          {
+            "node": "スプシにnoteとX投稿を記載",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "note作成": {
+      "main": [
+        [
+          {
+            "node": "X投稿作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "X投稿作成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FileCreateTrigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "note作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "画像生成プロンプト作成": {
+      "main": [
+        [
+          {
+            "node": "画像生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "画像生成": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bd46fce6-4b04-4da6-a7b6-4432ccdffac7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "mchEIJd3Cm2xXqXZ",
+  "tags": []
+}

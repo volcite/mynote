@@ -1,0 +1,235 @@
+{
+  "name": "X投稿メトリクス取得",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        300
+      ],
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "手動実行"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1b2c3d4-0010-4000-8000-000000000010",
+              "name": "tweet_ids",
+              "value": "1234567890,9876543210,1111111111",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-0011-4000-8000-000000000011",
+              "name": "bearer_token",
+              "value": "YOUR_BEARER_TOKEN",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        300
+      ],
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "投稿IDを設定"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twitter.com/2/tweets",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ids",
+              "value": "={{ $json.tweet_ids }}"
+            },
+            {
+              "name": "tweet.fields",
+              "value": "public_metrics,created_at,text"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.bearer_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        300
+      ],
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "X API メトリクス取得"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        440,
+        300
+      ],
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "投稿ごとに分割"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1b2c3d4-0020-4000-8000-000000000020",
+              "name": "tweet_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-0021-4000-8000-000000000021",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-0022-4000-8000-000000000022",
+              "name": "created_at",
+              "value": "={{ $json.created_at }}",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-0023-4000-8000-000000000023",
+              "name": "like_count",
+              "value": "={{ $json.public_metrics.like_count }}",
+              "type": "number"
+            },
+            {
+              "id": "a1b2c3d4-0024-4000-8000-000000000024",
+              "name": "reply_count",
+              "value": "={{ $json.public_metrics.reply_count }}",
+              "type": "number"
+            },
+            {
+              "id": "a1b2c3d4-0025-4000-8000-000000000025",
+              "name": "retweet_count",
+              "value": "={{ $json.public_metrics.retweet_count }}",
+              "type": "number"
+            },
+            {
+              "id": "a1b2c3d4-0026-4000-8000-000000000026",
+              "name": "quote_count",
+              "value": "={{ $json.public_metrics.quote_count }}",
+              "type": "number"
+            },
+            {
+              "id": "a1b2c3d4-0027-4000-8000-000000000027",
+              "name": "bookmark_count",
+              "value": "={{ $json.public_metrics.bookmark_count }}",
+              "type": "number"
+            },
+            {
+              "id": "a1b2c3d4-0028-4000-8000-000000000028",
+              "name": "impression_count",
+              "value": "={{ $json.public_metrics.impression_count }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        300
+      ],
+      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "name": "メトリクス整形"
+    },
+    {
+      "parameters": {
+        "content": "## X投稿メトリクス取得\n\n### 使い方\n1. 「投稿IDを設定」ノードに取得したいツイートIDをカンマ区切りで入力（最大100件）\n2. bearer_token に X API の Bearer Token を設定\n3. 実行すると各投稿のいいね数・リプライ数・RT数等を取得\n\n### 必要なAPIプラン\nX API Basic ($200/月) 以上",
+        "height": 240,
+        "width": 1080,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -260,
+        100
+      ],
+      "typeVersion": 1,
+      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "手動実行": {
+      "main": [
+        [
+          {
+            "node": "投稿IDを設定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "投稿IDを設定": {
+      "main": [
+        [
+          {
+            "node": "X API メトリクス取得",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "X API メトリクス取得": {
+      "main": [
+        [
+          {
+            "node": "投稿ごとに分割",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "投稿ごとに分割": {
+      "main": [
+        [
+          {
+            "node": "メトリクス整形",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0
+}

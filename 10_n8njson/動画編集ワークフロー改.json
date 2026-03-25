@@ -1,0 +1,595 @@
+{
+  "name": "動画編集ワークフロー改",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4272,
+        528
+      ],
+      "id": "84534f25-c4bb-4238-a24d-55e79f900916",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.creatomate.com/v1/renders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"template_id\": \"a41fcc83-9d81-4a03-9344-071b7f8cd407\",\n  \"modifications\": {\n    \"Video-1\": \"{{ $json.movie1 }}\",\n    \"Video-2\": \"{{ $json.movie2 }}\",\n    \"Voiceover-1.source\": \"{{ $json.text1 }}\",\n    \"Voiceover-2.source\": \"{{ $json.text2 }}\"\n  }\n}",
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4416,
+        528
+      ],
+      "id": "a584bffa-fa1d-4ff6-ad16-627b9ddea64a",
+      "name": "HTTP Request11",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "YTT6gavWBOeibxpy",
+          "name": "Createmate"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4560,
+        528
+      ],
+      "id": "126dc074-0f5a-4210-bb1d-6668cdd08e11",
+      "name": "Wait5",
+      "webhookId": "9ec1e763-29dc-4ecd-9e9b-ecdfc7c123ca"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1ebf09a-ddd4-4306-bcba-0e861dd2f9cc",
+              "name": "movie1",
+              "value": "={{ $('Create an object1').item.json.mediaLink }}",
+              "type": "string"
+            },
+            {
+              "id": "664da05b-ac91-4403-bee7-764ad451e792",
+              "name": "text1",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4032,
+        448
+      ],
+      "id": "cdde19e0-fc2f-4e1e-85cd-6f826d7cc9b7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "object",
+        "operation": "create",
+        "bucketName": "finsredbag",
+        "objectName": "=image2",
+        "createData": {},
+        "createQuery": {},
+        "encryptionHeaders": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.googleCloudStorage",
+      "typeVersion": 1,
+      "position": [
+        3328,
+        608
+      ],
+      "id": "56a94afb-90f8-42db-96fb-a9d1c8bd9c46",
+      "name": "Create an object",
+      "retryOnFail": true,
+      "credentials": {
+        "googleCloudStorageOAuth2Api": {
+          "id": "WlP172F8vY1WwAS7",
+          "name": "Google Cloud Storage account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "object",
+        "operation": "create",
+        "bucketName": "finsredbag",
+        "objectName": "=movie1",
+        "createData": {},
+        "createQuery": {},
+        "encryptionHeaders": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.googleCloudStorage",
+      "typeVersion": 1,
+      "position": [
+        3328,
+        448
+      ],
+      "id": "73e59a2e-f6b1-4d40-ac5c-cfa2b46a20c2",
+      "name": "Create an object1",
+      "retryOnFail": true,
+      "credentials": {
+        "googleCloudStorageOAuth2Api": {
+          "id": "WlP172F8vY1WwAS7",
+          "name": "Google Cloud Storage account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "sampleMovie",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Nmpq9ZdP5sXGfwQgOcuwjerYU2Kw9Mss",
+          "mode": "list",
+          "cachedResultName": "n8n動画編集",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Nmpq9ZdP5sXGfwQgOcuwjerYU2Kw9Mss"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4896,
+        528
+      ],
+      "id": "47707771-156b-4aa9-83a8-56f993b94d8f",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "動画のテーマを入力してください。",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "テーマ1",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "テーマ2",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        2880,
+        528
+      ],
+      "id": "4d520179-10eb-43b1-8c0b-c511f40ed2c3",
+      "name": "On form submission",
+      "webhookId": "b2c6c746-a32d-4eb8-b956-88ab1034910b"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "modelId": {
+          "__rl": true,
+          "value": "models/veo-2.0-generate-001",
+          "mode": "list",
+          "cachedResultName": "models/veo-2.0-generate-001"
+        },
+        "prompt": "=下記テーマに沿った動画を生成してください。\n\n {{ $json['テーマ1'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        448
+      ],
+      "id": "0fded933-f77f-4182-97bc-e72e47773fd5",
+      "name": "Generate a video",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "modelId": {
+          "__rl": true,
+          "value": "models/veo-2.0-generate-001",
+          "mode": "list",
+          "cachedResultName": "models/veo-2.0-generate-001"
+        },
+        "prompt": "=下記テーマに沿った動画を生成してください\n\n{{ $json['テーマ2'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        608
+      ],
+      "id": "840b7a48-40f7-48f5-aa46-d4c99f6ea56e",
+      "name": "Generate a video1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileUrl": "={{ $json.mediaLink }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        3488,
+        448
+      ],
+      "id": "ec7c8580-9588-4e11-afe2-c46657792d7c",
+      "name": "Upload a file",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileUrl": "={{ $json.mediaLink }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        3488,
+        608
+      ],
+      "id": "5859d547-0b35-4b54-834a-588a7d4b768f",
+      "name": "Upload a file1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=この動画にいれるナレーションを英語で考えてください\nナレーションのみ出力してください\n改行はなしです\n\n{{ $json.fileUri }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        3696,
+        448
+      ],
+      "id": "83ba099e-5f71-4e56-99bd-e21cb31299e8",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1ebf09a-ddd4-4306-bcba-0e861dd2f9cc",
+              "name": "movie2",
+              "value": "={{ $('Create an object').item.json.mediaLink }}",
+              "type": "string"
+            },
+            {
+              "id": "664da05b-ac91-4403-bee7-764ad451e792",
+              "name": "text2",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4032,
+        608
+      ],
+      "id": "e9289bf5-2a3e-416f-bfc4-fd3ab3317049",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=この動画にいれるナレーションを英語で考えてください\nナレーションのみ出力してください\n改行はなしです\n\n{{ $json.fileUri }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        3696,
+        608
+      ],
+      "id": "5cf4465f-e301-452d-ac8c-7a9ec39efdb1",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4720,
+        528
+      ],
+      "id": "cb385d62-13cb-499d-91df-f3980036064f",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request11": {
+      "main": [
+        [
+          {
+            "node": "Wait5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an object": {
+      "main": [
+        [
+          {
+            "node": "Upload a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an object1": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Generate a video",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate a video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate a video": {
+      "main": [
+        [
+          {
+            "node": "Create an object1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate a video1": {
+      "main": [
+        [
+          {
+            "node": "Create an object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file1": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2b47cc6c-9654-4958-8d30-1acbc339d80a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "TJO910QMccxBGt47",
+  "tags": []
+}

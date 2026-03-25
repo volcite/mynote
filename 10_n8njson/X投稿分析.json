@@ -1,0 +1,451 @@
+{
+  "name": "X投稿分析",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.twitterapi.io/twitter/tweet/advanced_search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.search_word }} min_faves:{{ $json.min_faves }} since:{{ $json.since }} until:{{ $json.until }} "
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "new1_d2026bb958e640d5b95e8f258db2bd4a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        304
+      ],
+      "id": "38cd088b-f3bc-4e5a-b7a8-79e821e305dc",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7ef4186-7970-432c-8829-fd90a24283db",
+              "name": "tweets",
+              "value": "={{ $json.tweets.filter(item => !item.text.includes(\"@\")) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        304
+      ],
+      "id": "b90071b1-f9f9-4531-bd9f-b25f95f4f3cd",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83103be0-9349-4c92-a999-fb5615c34bb7",
+              "leftValue": "={{ $json.tweets }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        272
+      ],
+      "id": "3f3748d4-35cc-45d7-8695-fab03b54df72",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e91e1d76-fdd4-4002-96f8-d0793ef76697",
+              "name": "since",
+              "value": "={{ DateTime.now().minus({ days: 30 }).toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "29efe626-b63c-4653-97b0-08bbed8dd02b",
+              "name": "until",
+              "value": "={{ DateTime.now().toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "61ded325-500b-4407-891f-aa17234f7b0e",
+              "name": "min_faves",
+              "value": "150",
+              "type": "string"
+            },
+            {
+              "id": "258ff2bf-0236-47a0-91fd-08f983245f1f",
+              "name": "search_word",
+              "value": "AI SNS運用",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        304
+      ],
+      "id": "471bcdd0-9a82-4708-85d2-b250c1dfd198",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=あなたは数多のバズを生み出すXのマーケター兼コピーライターです。\nバズっている投稿を添付するので、下記手順に沿ってバズる投稿の型を抽出してください。過去の自分の投稿の情報もGoogleSheetから取得して分析してください。\n\n## 手順\n1, バズっている投稿を一つひとつ文章の型を分析してください\n2, バズっている要素を抽出して、なぜバズっているのかを言語化してください\n3, その分析をもとにバズる投稿の型を作成してください。当てはめるだけでそのまま投稿できるような形式にしてください。\n\n## 出力\nバズる投稿の型のみ出力してください\n\n## バズっている投稿\n{{ $json.tweets[0].text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        272
+      ],
+      "id": "d00104b3-0999-4c03-85bf-1276099c06c4",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        400
+      ],
+      "id": "f8d3e02a-7c38-47cb-a1cf-ab34ed357b12",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 19
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -48,
+        304
+      ],
+      "id": "98d77b1a-866c-423f-941b-aaabca9b45d3",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "content": "## Xのバズっている投稿を抽出して、型を作成",
+        "height": 320,
+        "width": 1488,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -112,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "eb4f9568-6392-4c20-8a8d-2ced4db8910f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y",
+          "mode": "list",
+          "cachedResultName": "n8n X 運用",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "シート1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "日時": "={{ $('Loop Over Items').item.json.tweets[0].createdAt }}",
+            "投稿": "={{ $('Loop Over Items').item.json.tweets[0].text }}",
+            "インプレッション": "={{ $('Loop Over Items').item.json.tweets[0].viewCount }}",
+            "いいね": "={{ $('Loop Over Items').item.json.tweets[0].likeCount }}",
+            "リツイート": "={{ $('Loop Over Items').item.json.tweets[0].retweetCount }}",
+            "リプ": "={{ $('Loop Over Items').item.json.tweets[0].replyCount }}",
+            "分析結果の型": "={{ $json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "日時",
+              "displayName": "日時",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "投稿",
+              "displayName": "投稿",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "インプレッション",
+              "displayName": "インプレッション",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "いいね",
+              "displayName": "いいね",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "リツイート",
+              "displayName": "リツイート",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "リプ",
+              "displayName": "リプ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "分析結果の型",
+              "displayName": "分析結果の型",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        272
+      ],
+      "id": "defa0aa2-c262-4a0c-a3bb-565a5a27b438",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        784,
+        224
+      ],
+      "id": "d39973e9-2876-4205-b7e4-e7ece10127f7",
+      "name": "Loop Over Items"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1dcd2f38-875d-40fe-bd38-c6af426065cf",
+  "meta": {
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "jmU8JG342cQplSMc",
+  "tags": []
+}

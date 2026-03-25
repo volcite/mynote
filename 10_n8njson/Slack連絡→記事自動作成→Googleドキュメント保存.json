@@ -1,0 +1,579 @@
+{
+    "name": "Slack連絡→記事自動作成→Googleドキュメント保存",
+    "nodes": [
+        {
+            "parameters": {
+                "content": "## Slack連絡→記事自動作成ワークフロー\n\n### 処理フロー\n1. Slackの特定チャンネルへのメッセージをトリガー\n2. メッセージ内容を取得\n3. AIが記事を自動生成（構成・本文）\n4. Googleドキュメントを作成・保存\n5. Slackに完了通知（ドキュメントリンク付き）\n\n### 事前準備\n- Slack App作成（Bot Token Scopes設定）\n- チャンネル監視設定\n- Google Docs API有効化",
+                "height": 280,
+                "width": 450
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -48,
+                -280
+            ],
+            "typeVersion": 1,
+            "id": "note-slack-001",
+            "name": "ワークフロー説明"
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "events": [
+                    "message"
+                ],
+                "channelId": {
+                    "__rl": true,
+                    "value": "YOUR_SLACK_CHANNEL_ID",
+                    "mode": "id"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.slackTrigger",
+            "typeVersion": 1,
+            "position": [
+                0,
+                0
+            ],
+            "id": "trigger-slack-001",
+            "name": "Slackメッセージ受信",
+            "credentials": {
+                "slackOAuth2Api": {
+                    "id": "YOUR_SLACK_CREDENTIAL_ID",
+                    "name": "YOUR_SLACK_CREDENTIAL_NAME"
+                }
+            },
+            "webhookId": "slack-webhook-001"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "condition-bot-check",
+                            "leftValue": "={{ $json.bot_id }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "empty"
+                            }
+                        },
+                        {
+                            "id": "condition-text-check",
+                            "leftValue": "={{ $json.text }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEmpty"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                200,
+                0
+            ],
+            "id": "if-check-001",
+            "name": "Bot以外のメッセージ確認"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "set-message",
+                            "name": "original_message",
+                            "value": "={{ $json.text }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-user",
+                            "name": "user_id",
+                            "value": "={{ $json.user }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-channel",
+                            "name": "channel_id",
+                            "value": "={{ $json.channel }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-timestamp",
+                            "name": "message_ts",
+                            "value": "={{ $json.ts }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-date",
+                            "name": "created_date",
+                            "value": "={{ DateTime.now().toFormat('yyyy-MM-dd HH:mm') }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                400,
+                0
+            ],
+            "id": "set-message-001",
+            "name": "メッセージ情報整理"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=あなたはプロのライター兼編集者です。\n以下のSlackメッセージをもとに、読みやすく構造化された記事を作成してください。\n\n# 元のメッセージ\n{{ $json.original_message }}\n\n# 作成ルール\n1. メッセージの意図と内容を正確に理解する\n2. 適切な見出し構成で整理する（H1, H2, H3を使用）\n3. 重要なポイントは箇条書きで強調\n4. 必要に応じて補足説明を追加\n5. 読者にとって分かりやすい表現を使用\n\n# 出力形式（JSON）\n{\n  \"title\": \"記事タイトル（簡潔で内容を表すもの）\",\n  \"summary\": \"記事の概要（2-3文）\",\n  \"body\": \"記事本文（Markdown形式、見出し・箇条書き含む）\",\n  \"tags\": [\"タグ1\", \"タグ2\", \"タグ3\"]\n}",
+                "hasOutputParser": true,
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2.2,
+            "position": [
+                600,
+                0
+            ],
+            "id": "agent-article-001",
+            "name": "記事自動生成"
+        },
+        {
+            "parameters": {
+                "options": {
+                    "model": "models/gemini-2.5-flash"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                600,
+                200
+            ],
+            "id": "gemini-model-001",
+            "name": "Google Gemini Chat Model",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "YOUR_GEMINI_API_CREDENTIAL_ID",
+                    "name": "YOUR_GEMINI_API_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsonSchemaExample": "{\n  \"title\": \"記事タイトル\",\n  \"summary\": \"記事の概要\",\n  \"body\": \"# 見出し1\\n本文...\",\n  \"tags\": [\"タグ1\", \"タグ2\"]\n}"
+            },
+            "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+            "typeVersion": 1.3,
+            "position": [
+                750,
+                200
+            ],
+            "id": "parser-article-001",
+            "name": "構造化出力パーサー"
+        },
+        {
+            "parameters": {
+                "operation": "create",
+                "title": "={{ $json.output.title }}",
+                "folderId": {
+                    "__rl": true,
+                    "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+                    "mode": "id"
+                }
+            },
+            "type": "n8n-nodes-base.googleDocs",
+            "typeVersion": 2,
+            "position": [
+                800,
+                0
+            ],
+            "id": "gdocs-create-001",
+            "name": "Googleドキュメント作成",
+            "credentials": {
+                "googleDocsOAuth2Api": {
+                    "id": "YOUR_GOOGLE_DOCS_CREDENTIAL_ID",
+                    "name": "YOUR_GOOGLE_DOCS_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "set-doc-id",
+                            "name": "document_id",
+                            "value": "={{ $json.documentId }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-doc-url",
+                            "name": "document_url",
+                            "value": "=https://docs.google.com/document/d/{{ $json.documentId }}/edit",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-article-title",
+                            "name": "article_title",
+                            "value": "={{ $('記事自動生成').item.json.output.title }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-article-body",
+                            "name": "article_content",
+                            "value": "={{ $('記事自動生成').item.json.output.summary }}\n\n---\n\n{{ $('記事自動生成').item.json.output.body }}\n\n---\n\n📅 作成日時: {{ $('メッセージ情報整理').item.json.created_date }}\n🏷️ タグ: {{ $('記事自動生成').item.json.output.tags.join(', ') }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                1000,
+                0
+            ],
+            "id": "set-doc-info-001",
+            "name": "ドキュメント情報整理"
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "={{ $json.document_id }}",
+                    "mode": "id"
+                },
+                "actionsUi": {
+                    "actionFields": [
+                        {
+                            "action": "insertText",
+                            "text": "={{ $json.article_content }}",
+                            "locationChoice": "endOfSegment",
+                            "segmentId": ""
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.googleDocs",
+            "typeVersion": 2,
+            "position": [
+                1200,
+                0
+            ],
+            "id": "gdocs-update-001",
+            "name": "記事内容を書き込み",
+            "credentials": {
+                "googleDocsOAuth2Api": {
+                    "id": "YOUR_GOOGLE_DOCS_CREDENTIAL_ID",
+                    "name": "YOUR_GOOGLE_DOCS_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "select": "channel",
+                "channelId": {
+                    "__rl": true,
+                    "value": "={{ $('メッセージ情報整理').item.json.channel_id }}",
+                    "mode": "id"
+                },
+                "text": "=✅ 記事を作成しました！\n\n📝 *{{ $json.article_title }}*\n\n🔗 <{{ $json.document_url }}|Googleドキュメントを開く>\n\n_元のメッセージから自動生成されました_",
+                "otherOptions": {
+                    "thread_ts": "={{ $('メッセージ情報整理').item.json.message_ts }}",
+                    "mrkdwn": true
+                }
+            },
+            "type": "n8n-nodes-base.slack",
+            "typeVersion": 2.2,
+            "position": [
+                1400,
+                0
+            ],
+            "id": "slack-reply-001",
+            "name": "Slackに完了通知",
+            "credentials": {
+                "slackOAuth2Api": {
+                    "id": "YOUR_SLACK_CREDENTIAL_ID",
+                    "name": "YOUR_SLACK_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "append",
+                "documentId": {
+                    "__rl": true,
+                    "value": "YOUR_LOG_SPREADSHEET_ID",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "記事作成ログ",
+                    "mode": "name"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "作成日時": "={{ $('メッセージ情報整理').item.json.created_date }}",
+                        "タイトル": "={{ $('ドキュメント情報整理').item.json.article_title }}",
+                        "ドキュメントURL": "={{ $('ドキュメント情報整理').item.json.document_url }}",
+                        "元メッセージ": "={{ $('メッセージ情報整理').item.json.original_message.substring(0, 100) }}..."
+                    },
+                    "matchingColumns": [],
+                    "schema": [
+                        {
+                            "id": "作成日時",
+                            "displayName": "作成日時",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "タイトル",
+                            "displayName": "タイトル",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "ドキュメントURL",
+                            "displayName": "ドキュメントURL",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "元メッセージ",
+                            "displayName": "元メッセージ",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                1400,
+                150
+            ],
+            "id": "sheets-log-001",
+            "name": "ログ記録",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+                    "name": "YOUR_GOOGLE_SHEETS_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "content": "## ステップ1: メッセージ受信\nSlackの指定チャンネルを監視",
+                "height": 70,
+                "width": 200,
+                "color": 4
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -20,
+                -100
+            ],
+            "typeVersion": 1,
+            "id": "note-step1",
+            "name": "ステップ1説明"
+        },
+        {
+            "parameters": {
+                "content": "## ステップ2: AI記事生成\nメッセージを構造化された記事に変換",
+                "height": 70,
+                "width": 280,
+                "color": 5
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                550,
+                -100
+            ],
+            "typeVersion": 1,
+            "id": "note-step2",
+            "name": "ステップ2説明"
+        },
+        {
+            "parameters": {
+                "content": "## ステップ3: ドキュメント作成・保存",
+                "height": 60,
+                "width": 280,
+                "color": 6
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                950,
+                -100
+            ],
+            "typeVersion": 1,
+            "id": "note-step3",
+            "name": "ステップ3説明"
+        },
+        {
+            "parameters": {
+                "content": "## ステップ4: 通知・ログ\nSlackに返信＆スプシに記録",
+                "height": 70,
+                "width": 200,
+                "color": 3
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                1380,
+                -100
+            ],
+            "typeVersion": 1,
+            "id": "note-step4",
+            "name": "ステップ4説明"
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Slackメッセージ受信": {
+            "main": [
+                [
+                    {
+                        "node": "Bot以外のメッセージ確認",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Bot以外のメッセージ確認": {
+            "main": [
+                [
+                    {
+                        "node": "メッセージ情報整理",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "メッセージ情報整理": {
+            "main": [
+                [
+                    {
+                        "node": "記事自動生成",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "記事自動生成": {
+            "main": [
+                [
+                    {
+                        "node": "Googleドキュメント作成",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "記事自動生成",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "構造化出力パーサー": {
+            "ai_outputParser": [
+                [
+                    {
+                        "node": "記事自動生成",
+                        "type": "ai_outputParser",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Googleドキュメント作成": {
+            "main": [
+                [
+                    {
+                        "node": "ドキュメント情報整理",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "ドキュメント情報整理": {
+            "main": [
+                [
+                    {
+                        "node": "記事内容を書き込み",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "記事内容を書き込み": {
+            "main": [
+                [
+                    {
+                        "node": "Slackに完了通知",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "ログ記録",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "slack-article-v1",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "placeholder"
+    },
+    "id": "slack-article-001",
+    "tags": []
+}

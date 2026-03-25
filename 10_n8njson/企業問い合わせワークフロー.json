@@ -1,0 +1,375 @@
+{
+  "name": "企業問い合わせワークフロー",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://places.googleapis.com/v1/places:searchText",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyD_FMXn7tUW0KdyQdI4Grh-aNGT3OuVt2w"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Goog-FieldMask",
+              "value": "places.displayName,places.websiteUri"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "textQuery",
+              "value": "港区 マーケティング会社"
+            },
+            {
+              "name": "pageSize",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "75d08940-dcdc-43d8-9847-ba0c7765ba4b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2f1c2774-830e-4a6b-9202-31e9149b7cb7",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "places",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "4bff570a-d0a9-4158-a61a-542fd1529746",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=下記情報をもとに調査を実施してください\nまた弊社が営業活動にするにあたり、相手の事業や会社情報に合わせて、営業文章を作成してください\n\n## 弊社情報\n{{ $('Edit Fields').item.json['弊社情報'] }}\n\n## 会社名\n{{ $json.displayName.text }}\n\n## サイトURL\n{{ $json.websiteUri }}\n\n## 出力内容\n会社名\n会社規模（従業員数）\n資本金\n事業内容\n問い合わせURL\n問い合わせ文章\n\n## 出力形式\n{\n    \"name\": \"California\",\n\t\"volume\": \"California\",\n\t\"money\": \"California\",\n    \"service\": \"California\",\n    \"url\": \"California\",\n    \"text\": \"California\"\n}\n"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        0
+      ],
+      "id": "2caaca10-dd7f-4b8d-bdc9-fa06eb92c570",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d4d49c90-1671-4953-be4e-956e6e22a851",
+              "name": "弊社情報",
+              "value": "株式会社こま。n8n構築代行をしてます。",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "067729b3-f3c4-4a5b-836d-92e9c21b94a6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1KUxjQhOp1EqcrIolm97dqzaJ3z76fNi6Wk_sZsewjyM",
+          "mode": "list",
+          "cachedResultName": "企業問い合わせワークフロー",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KUxjQhOp1EqcrIolm97dqzaJ3z76fNi6Wk_sZsewjyM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "シート1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KUxjQhOp1EqcrIolm97dqzaJ3z76fNi6Wk_sZsewjyM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "企業名": "={{ $json.name }}",
+            "会社規模": "={{ $json.volume }}",
+            "資本金": "={{ $json.money }}",
+            "事業内容": "={{ $json.service }}",
+            "問い合わせＵＲＬ": "={{ $json.url }}",
+            "問い合わせ文章": "={{ $json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "企業名",
+              "displayName": "企業名",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "会社規模",
+              "displayName": "会社規模",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "資本金",
+              "displayName": "資本金",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "事業内容",
+              "displayName": "事業内容",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "問い合わせＵＲＬ",
+              "displayName": "問い合わせＵＲＬ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "問い合わせ文章",
+              "displayName": "問い合わせ文章",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1280,
+        0
+      ],
+      "id": "2f5c231f-cd80-4527-8b41-90017b3d4d81",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8cb41655-83d0-4703-8571-85320d91d5a7",
+              "name": "name",
+              "value": "={{ JSON.parse($json.content.parts[0].text).name }}",
+              "type": "string"
+            },
+            {
+              "id": "c46e5e0f-e006-4d5e-a14a-caa1b3d1f165",
+              "name": "volume",
+              "value": "={{ JSON.parse($json.content.parts[0].text).volume }}",
+              "type": "string"
+            },
+            {
+              "id": "45ae1047-ce5c-4f96-b2c2-25c9b8c466ad",
+              "name": "money",
+              "value": "={{ JSON.parse($json.content.parts[0].text).money }}",
+              "type": "string"
+            },
+            {
+              "id": "dec27395-b93c-4923-9195-d8a13e56534a",
+              "name": "service",
+              "value": "={{ JSON.parse($json.content.parts[0].text).service }}",
+              "type": "string"
+            },
+            {
+              "id": "df27d912-2fdf-4e8b-adce-f09ec71baacc",
+              "name": "url",
+              "value": "={{ JSON.parse($json.content.parts[0].text).url }}",
+              "type": "string"
+            },
+            {
+              "id": "fdf41d2a-c5ae-441f-ae23-e9320ee35f7b",
+              "name": "text",
+              "value": "={{ JSON.parse($json.content.parts[0].text).text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        0
+      ],
+      "id": "f16c6d0d-8071-40bc-a6c0-11569ebeb2a5",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "9668f5be-0092-4e6a-85ac-b15fc0eef477",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "AjUK63oJBpWxeOiZ",
+  "tags": []
+}

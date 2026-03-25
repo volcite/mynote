@@ -1,0 +1,1390 @@
+{
+  "name": "Sora2",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://api.openai.com/v1/videos/{{ $('Sora2').item.json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        1024
+      ],
+      "id": "276463fe-fd0d-4e90-844b-01e129c9e0b1",
+      "name": "Get Video",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O4pNKXRdl2JWMiDy",
+          "name": "sora2 auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.openai.com/v1/videos/{{ $('Sora2').item.json.id }}/content",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1792,
+        1008
+      ],
+      "id": "81e2d992-9c16-466f-9f02-163cea648d64",
+      "name": "Download Video",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O4pNKXRdl2JWMiDy",
+          "name": "sora2 auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc",
+          "mode": "list",
+          "cachedResultName": "SNS動画自動投稿",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "投稿管理",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $('AI Agent').item.json.output.title }}",
+            "Result": "=https://studio.youtube.com/video/{{ $json.uploadId }}/edit",
+            "status": "Done"
+          },
+          "matchingColumns": [
+            "Title"
+          ],
+          "schema": [
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Result",
+              "displayName": "Result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2160,
+        1008
+      ],
+      "id": "fc444038-a920-4875-92ea-40eed81ffee2",
+      "name": "Add Result To Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "39d5c300-ee88-4047-af45-1346df398467",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        1024
+      ],
+      "id": "30e2883e-809a-475a-850b-ce78d95e5a26",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "## Sora2動画生成",
+        "height": 528,
+        "width": 1344,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1008,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "e9aeb1c3-0778-4702-afb7-937e828fcece",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/videos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "sora-2"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.output.sora_prompt }}"
+            },
+            {
+              "name": "size",
+              "value": "=720x1280"
+            },
+            {
+              "name": "seconds",
+              "value": "12"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2224,
+        512
+      ],
+      "id": "8e87eb59-05ab-4bb5-b46f-6d17ba3a864d",
+      "name": "Sora2",
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O4pNKXRdl2JWMiDy",
+          "name": "sora2 auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('AI Agent').item.json.output.youtube.title }}",
+        "regionCode": "JP",
+        "categoryId": "1",
+        "binaryProperty": "=data",
+        "options": {
+          "description": "={{ $('AI Agent').item.json.output.youtube.description }}",
+          "selfDeclaredMadeForKids": false
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        1008
+      ],
+      "id": "ed4057a0-5489-4907-ad1f-a9832268676c",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "srb9wDooKTLAz6Ap",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "get",
+        "videoId": "={{ $json.id.videoId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        80
+      ],
+      "id": "106a2dc1-55ab-4774-ab37-ea252123dc3b",
+      "name": "Get a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "srb9wDooKTLAz6Ap",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        1024
+      ],
+      "id": "b76df912-ab8a-4cbd-a59f-56754ace7b0b",
+      "name": "Wait",
+      "webhookId": "5376701b-21f3-4bb2-9ced-226215f8f214"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1632,
+        1072
+      ],
+      "id": "6e64cebf-4a10-4d9b-a8fd-fdc3651a982f",
+      "name": "Wait1",
+      "webhookId": "3059543c-b972-427a-a404-3b9e6c56773a"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "603f3dd5-69a0-48cf-a3da-9d4b71284c20",
+              "leftValue": "={{ $('Get Video').item.json.status }}",
+              "rightValue": "failed",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1488,
+        1088
+      ],
+      "id": "4a5db46a-623b-4e18-9dfb-0a6aa95260d9",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "content": "## 動画取得",
+        "height": 288,
+        "width": 864
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1008,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "82741293-c511-492a-a3c7-8a2b64541f0d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 動画ダウンロード",
+        "height": 496,
+        "width": 944,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1008,
+        928
+      ],
+      "typeVersion": 1,
+      "id": "3111d428-f150-49d2-a1b7-87fbc5f725b2",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### 役割\nあなたは、YouTubeショートのアルゴリズムと人間の視聴者心理を完全に理解した、天才バイラルビデオ・プロデューサーです。\n\n### 目的\n私が提示する「動画のテーマ」に基づき、100万再生を狙える「バズるYouTubeショート動画」（**12秒以内**）を生成AIで作成するための、具体的かつ詳細な「動画生成プロンプト」を1つ作成してください。\n\n### 【★】ユーザーが入力するデータ\n\n**1. 動画のテーマ:**\n`{{ $json.category }}`\n\n---\n\n### 【★】AI（あなた）が実行するタスク\n\n1.  **テーマの分析:** 提示されたテーマから、ターゲットが最も好奇心をそそられる「切り口（フック）」を考案する。\n2.  **バイラルフォーマットの選定:** テーマに最適な「バズる型」（例：TIPS紹介、Before/After、問題提起→解決、POV、\"知らないと損\"系）を決定する。\n3.  **動画プロンプトの作成:** 以下の「出力形式」に従い、動画生成AIが解釈できるよう、視覚的かつ時系列に沿った詳細なプロンプトを作成する。\n\n---\n\n### 出力形式（動画生成プロンプト）\n\n* **【動画の構成（全12秒想定）】:**\n    * **（0-2秒）導入（フック）:**\n        * `[動画生成AIへの指示：例：超高速でタイピングされるキーボードの極端なクローズアップ。画面にデジタルノイズが走る。]`\n        * `[画面上のテキスト（テロップ）：例：まだ手作業で消耗してる？]`\n    * **（3-9秒）展開（価値の提示）:**\n        * `[動画生成AIへの指示：例：n8nのノードが魔法のように自動で繋がり、次の瞬間、Slackの通知アイコンとGoogleスプレッドシートのアイコンが光り、連動する様子をスタイリッシュに見せる。]`\n        * `[画面上のテキスト（テロップ）：例：このAIで、通知も集計も完全自動化]`\n    * **（10-12秒）結び（CTAとループ）:**\n        * `[動画生成AIへの指示：例：男性がPCの前でリラックスしてコーヒーを飲んでいる。映像が冒頭のキーボードのシーンに瞬時に切り替わる（シームレスループ構造）]`\n        * `[画面上のテキスト（テロップ）：例：詳細はプロフへ！]`\n* **【音声/BGMの指示】:**\n    * `[例：BGMはアップテンポで緊張感のあるエレクトロニック・ミュージック。0秒、3秒、10秒のシーン切り替わりで「シュッ！」という効果音。]`\n\n### 実行\n上記の全要件を満たした上で、最も「バズる」可能性の高い「動画生成プロンプト」を1つだけ作成してください。",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        512
+      ],
+      "id": "2becbf30-91b8-45a1-8e8f-135d00cb1428",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTubeTool",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        656
+      ],
+      "id": "f2f34075-afb6-4ba8-8b92-c0bf483b6cca",
+      "name": "Get many videos in YouTube1",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "srb9wDooKTLAz6Ap",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        656
+      ],
+      "id": "97a31d51-7c09-4cba-b389-ac29e30aa3a9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"sora_prompt\": \"A 12-second long, cinematic 4K photorealistic video sequence... [0:00-0:03] ... [0:04-0:07] ... [0:08-0:12] ...\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1520,
+        656
+      ],
+      "id": "dd15fdd8-54f5-4960-8184-6afa59d6a52f",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "シート1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $('AI Agent').item.json.output.title }}",
+            "status": "Failed"
+          },
+          "matchingColumns": [
+            "Title"
+          ],
+          "schema": [
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Result",
+              "displayName": "Result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1616,
+        1264
+      ],
+      "id": "d3796fed-9411-4ef6-802d-f9c18190c25a",
+      "name": "Add Result To Sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 19
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        512
+      ],
+      "id": "2a9b8099-894b-4f67-bbd9-e44b9cf18f83",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "=17841478290614274",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "caption",
+                "value": "={{ $('AI Agent1').item.json.output.instagram_description }}"
+              },
+              {
+                "name": "media_type",
+                "value": "REELS"
+              },
+              {
+                "name": "video_url",
+                "value": "={{ $json.mediaLink }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        1264
+      ],
+      "id": "4915c903-0f6f-40b1-ab8a-b5bdd8d5fc10",
+      "name": "Facebook Graph API",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "zxvPUSob1IagSVxt",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "17841478290614274",
+        "edge": "media_publish",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "creation_id",
+                "value": "={{ $('Facebook Graph API').item.json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        1264
+      ],
+      "id": "d4fe0098-4c22-48a6-967e-e86759cf4048",
+      "name": "Facebook Graph API1",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "zxvPUSob1IagSVxt",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "object",
+        "operation": "create",
+        "bucketName": "finsredbag",
+        "objectName": "={{ $('AI Agent').item.json.output.youtube.title }}",
+        "createData": {},
+        "createQuery": {},
+        "encryptionHeaders": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.googleCloudStorage",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        1264
+      ],
+      "id": "2da6e4ab-4733-4720-a9e3-0d01958a39a3",
+      "name": "Create an object",
+      "retryOnFail": true,
+      "credentials": {
+        "googleCloudStorageOAuth2Api": {
+          "id": "WlP172F8vY1WwAS7",
+          "name": "Google Cloud Storage account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2352,
+        1264
+      ],
+      "id": "68f6f0b5-9aec-40ab-a5f7-ed322dc653b4",
+      "name": "Wait4",
+      "webhookId": "721ee8e2-7eaf-4afd-909a-e95d14df307e"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc",
+          "mode": "list",
+          "cachedResultName": "SNS動画自動投稿",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 891872582,
+          "mode": "list",
+          "cachedResultName": "分析",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc/edit#gid=891872582"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1616,
+        512
+      ],
+      "id": "572cdd8f-cb0e-413e-b116-ceae9039dd13",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        512
+      ],
+      "id": "f39ea05e-4500-401e-a818-f27fee835b46",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### 役割 あなたは、視聴者心理と各種プラットフォーム（YouTube, Instagram）のアルゴリズムを熟知した、プロのSNSマーケティング・コンサルタントです。\n\n### 目的 私が提供する**「動画のテーマ」**および**「過去の投稿データ（スプレッドシート）」**に基づき、AIが自律的に競合分析・過去データ分析を行い、YouTubeショートとInstagramリールでの「バズ」（高い再生数とエンゲージメント）を達成するための、最も効果的なタイトルとディスクリプションを作成してください。\n\n### 動画のテーマ：{{ $('Edit Fields').item.json.category }}\n\n**1. 作成する動画の概要:** \n* **動画のテーマ（または動画生成AIへの指示文）:** \n`{{ $('AI Agent').item.json.output.sora_prompt }}`\n\n**2. 過去の投稿データ（任意）:**\n* **スプレッドシートのデータ（コピー＆ペースト）:**\n`{{ $json.data }}`\n\n---\n\n### 【★】AI（あなた）が実行するタスク\n\n1.  **キーワード抽出:** 上記の「動画のテーマ」から、最も重要と思われるメインキーワードと関連キーワードを3〜5個抽出する。（例：`n8n 使い方`, `業務自動化 AI`, `Slack 連携`, `ノーコード`） 2.  **競合分析 (Web検索):** 抽出したキーワードでGoogle検索（YouTubeショートやリールのトレンド）を実行し、現在再生数が伸びている競合動画のタイトルやフックを分析する。 3.  **傾向の特定:** 競合分析から「現在バズりやすい言葉の傾向」（例：「神」「ヤバい」「悪用厳禁」「99%が知らない」など）を特定する。 4.  **最適化案の作成:** * **過去データの分析:** ユーザー提供の「スプレッドシートのデータ」がある場合、それを分析し、「再生数が伸びる傾向（例：タイトル、トピック）」と「エンゲージメントが高い傾向（例：CTA、質問）」を特定する。\n    * **総合提案:** 競合分析と過去データ分析の両方を考慮し、以下の出力要件に従って最適な案を作成する。\n\n### 出力要件\n\n以下の3つを出力してください。\n\n1.  **YouTubeショート タイトル案 (40文字以内推奨):** \n* ターゲットの悩みと解決策（ベネフィット）を明確に。\n* ショートフィードや検索結果で瞬時に目を引き、タップしたくなるもの。     \n* 数字や「神」「ヤバい」「悪用厳M」など、分析に基づいたパワーワードを効果的に使用する。\n\n2.  **YouTubeショート ディスクリプション (説明欄):**\n* 動画の内容を補足する簡潔な説明（1〜2行）。     \n* チャンネル登録や他の動画への行動喚起 (CTA)。\n* 関連するハッシュタグ（`#shorts` を必ず含め、その他に3〜5個程度）。\n\n3.  **Instagramディスクリプション (リール用):** \n* **最初の1行**でスクロールを止めるフック（問いかけ、衝撃的な事実など）。\n* 投稿の価値（例：「このAIツールで残業ゼロ」）を簡潔に伝える。     \n* **「保存」を強く促す行動喚起 (CTA)**。（例：「後で見返すために『保存』がおすすめ！」）\n* **エンゲージメントを高める質問**。（例：「あなたはどんな作業を自動化したいですか？コメントで教えてね！」）     \n* フォローを促す行動喚起 (CTA)。（例：「他の自動化テクニックも見逃さないよう、フォローしてね！」）\n* 関連するハッシュタグ (10個程度)。\n\n### 実行 上記の全要件を満たした上で、最も「バズる」可能性の高い案を作成してください。",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1952,
+        512
+      ],
+      "id": "2a56b904-8113-4315-809d-95d6b6fbdc06",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1952,
+        656
+      ],
+      "id": "3300db48-1f04-41a9-bec8-8eb341d3ce9d",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTubeTool",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        656
+      ],
+      "id": "24f68e41-3874-4c7e-a6f3-4579347a5b4e",
+      "name": "Get many channels in YouTube",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "srb9wDooKTLAz6Ap",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b2dac079-cdd6-42dc-8383-761b341f3fb0",
+              "name": "category",
+              "value": "リアルな動物が本当に料理をしているよう",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        512
+      ],
+      "id": "f4ea35cb-0e79-4df0-b6ca-8e9ca3ae8622",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"youtube_title\": \"ここにYoutubeのタイトル\",\n\t\"youtube_description\": \"ここにYoutubeのディスクリプション\",\n\t\"instagram_description\": \"ここにインスタグラムのディスクリプション\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2128,
+        656
+      ],
+      "id": "2a04a931-52a8-4c9f-a83d-0cb7f44a0910",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "content": "## Youtubeアップロード",
+        "height": 240,
+        "width": 752,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1968,
+        928
+      ],
+      "typeVersion": 1,
+      "id": "a30c309a-3657-40ed-9975-3bc26671d212",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Facebookアップロード",
+        "height": 240,
+        "width": 752,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1968,
+        1184
+      ],
+      "typeVersion": 1,
+      "id": "4488938e-6724-40ac-8bbd-6fd967414cba",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 16
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        144
+      ],
+      "id": "3b6f7cae-28fb-4edb-b853-57c0b408f806",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc",
+          "mode": "list",
+          "cachedResultName": "SNS動画自動投稿",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 891872582,
+          "mode": "list",
+          "cachedResultName": "分析",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QPznZypTBjoJSYVA9u_TrcFWYmGya5o_F8MMZsHPkgc/edit#gid=891872582"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "投稿日時": "={{ $json.snippet.publishedAt }}",
+            "タイトル": "={{ $json.snippet.localized.title }}",
+            "再生数": "={{ $json.statistics.viewCount }}",
+            "高評価": "={{ $json.statistics.likeCount }}",
+            "低評価": "={{ $json.statistics.dislikeCount }}",
+            "コメント数": "={{ $json.statistics.commentCount }}",
+            "URL": "=https://studio.youtube.com/video/{{ $json.snippet.channelId }}/edit"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "投稿日時",
+              "displayName": "投稿日時",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "タイトル",
+              "displayName": "タイトル",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "再生数",
+              "displayName": "再生数",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "高評価",
+              "displayName": "高評価",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "低評価",
+              "displayName": "低評価",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "コメント数",
+              "displayName": "コメント数",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1648,
+        80
+      ],
+      "id": "d12da0c5-8b2a-4231-a1a6-be2257d3eaef",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "limit": 50,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        144
+      ],
+      "id": "321cc72a-c2a7-4bfb-b22b-91ed2495ea97",
+      "name": "Get many videos",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "srb9wDooKTLAz6Ap",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "46b29f13-456c-4fc3-9975-b71feb883c5d",
+              "leftValue": "={{ DateTime.now().minus({ days: 7 }) }}",
+              "rightValue": "={{ $('Get many videos').item.json.snippet.publishedAt }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "beforeOrEquals"
+              }
+            },
+            {
+              "id": "79f5e0c2-aa0d-4830-958d-926865d56503",
+              "leftValue": "={{ DateTime.now() }}",
+              "rightValue": "={{ $('Get many videos').item.json.snippet.publishedAt }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        144
+      ],
+      "id": "8f1f34c9-b2b3-4489-8357-97ebb9fdcbd6",
+      "name": "If1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Video": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create an object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Result To Sheet": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Download Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a video": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video": {
+      "main": [
+        [
+          {
+            "node": "Add Result To Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add Result To Sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many videos in YouTube1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Graph API": {
+      "main": [
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an object": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many channels in YouTube": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Sora2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get many videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many videos": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Get a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f98e8b4a-682c-4ead-850d-494fcf7c0911",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "xDZN1be57TmOGxSV",
+  "tags": []
+}

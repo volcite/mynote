@@ -1,0 +1,902 @@
+{
+  "name": "Threads自動化ワークフロー",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cfc73c2c-619d-4323-beab-6c87750b19ad",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              },
+              "leftValue": "={{ $('AI Agent').item.json.output.length }}",
+              "rightValue": 500
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e21b8e32-f615-40cc-b145-57dcbc067027",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        784,
+        16
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# 命令書\nあなたはSNSマーケティングのプロフェッショナルです。\n以下の[投稿テーマ]をもとに、Threads（スレッズ）で最もエンゲージメント（いいね・保存・再投稿）が期待できる「至高の1投稿」を作成してください。\n\n# 投稿テーマ\n{{ $json['投稿テーマ'] }}\n\n# 思考プロセス（内部処理）\n1. **キーワード分析**: キーワードの性質（共感、有益、逆説、ストーリー、問いかけ）を分析する。\n2. **型の選定**: 以下のフレームワークの中から、今回のキーワードで最もバズる確率が高い**「ベストな1つの型」**を選定する。\n3. **投稿作成**: 選定した型に特化し、Threads特有のトーンで執筆する。\n\n# バズりフレームワーク（選択肢）\n- 【共感・あるある型】（日常のモヤモヤ、失敗談、インサイト）\n- 【有益・ノウハウ型】（具体的な解決策、箇条書き、保存推奨）\n- 【逆説・本音型】（常識へのアンチテーゼ、鋭い意見、議論喚起）\n- 【ストーリー・変化型】（Before/After、具体的な数字とエピソード）\n- 【問いかけ・参加型】（リプライ欄への誘導、クイズ、相談）\n\n# 制約条件\n- **出力は「最終的な投稿案」の1つのみとする。**\n- 1行目はスクロールを止める強力なフック（興味付け）を入れること。\n- 堅苦しい表現は避け、距離感の近い「独り言」のような口語体にする。\n- 漢字とひらがなのバランスを調整し、視覚的な読みやすさを意識する。\n- 140文字〜300文字程度。\n- ハッシュタグは原則なし（どうしても必要な場合のみ1つ）。\n\n# 出力形式\n投稿本文のみテキストで出力してください。\n\n---\nそれでは、入力キーワードから最適解を導き出し、投稿を作成してください。",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        16
+      ],
+      "id": "ac45beff-e8a4-4ffc-9495-ad5d65db4166",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        496,
+        160
+      ],
+      "id": "3fea5e6f-f951-43f5-abda-187f00c177c4",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "67f99daa-5469-4459-991f-f36c731baaa0",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU",
+          "mode": "list",
+          "cachedResultName": "Threads投稿管理",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "投稿一覧",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU/edit#gid=0"
+        },
+        "options": {
+          "columnsToWatch": [
+            "投稿テーマ"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "dc6ca9e9-d5e8-4af1-a9ab-580845347bbe",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "qU8kzoea17yq9KkX",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=下記Threadsの投稿に合う画像を生成したいです。\n画像生成プロンプトを作成してください\n\n## 注意事項\n画像はイラスト風にしてください。\n\n## 出力形式\n英文の画像生成プロンプトのみ出力してください。\n\n## 投稿文章\n {{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        928,
+        0
+      ],
+      "id": "d5f76508-dfbb-4759-892f-dc45e4c9db83",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "object",
+        "operation": "create",
+        "bucketName": "n8n-threads",
+        "objectName": "={{ DateTime.now().format(\"yyyy-MM-dd-HH-mm-ss\") }}",
+        "createData": {},
+        "createQuery": {},
+        "encryptionHeaders": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.googleCloudStorage",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        0
+      ],
+      "id": "570aeeba-28e0-48e2-8b32-78736256f55f",
+      "name": "Create an object",
+      "retryOnFail": true,
+      "credentials": {
+        "googleCloudStorageOAuth2Api": {
+          "id": "WlP172F8vY1WwAS7",
+          "name": "Google Cloud Storage account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "097dce16-f23b-4c60-8d6b-e17e88c2b99a",
+              "name": "user_id",
+              "value": "25315012291519309",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        384
+      ],
+      "id": "47cba089-a76e-444c-955e-148157d3586d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.threads.net/v1.0/{{ $json.user_id }}/threads",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "IMAGE"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $('Get row(s) in sheet1').item.json['画像URL'] }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Get row(s) in sheet1').item.json['投稿内容'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        624,
+        384
+      ],
+      "id": "3819fc3f-bf97-4276-acea-bd359ae0ba53",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "Vwg68zIkCfFgc6Kt",
+          "name": "Threads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.threads.net/v1.0/{{ $('Edit Fields').item.json.user_id }}/threads_publish",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        912,
+        384
+      ],
+      "id": "0f54d3eb-bcdd-4faa-86c3-159ec97170a1",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "Vwg68zIkCfFgc6Kt",
+          "name": "Threads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU",
+          "mode": "list",
+          "cachedResultName": "Threads投稿管理",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "投稿一覧",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "投稿テーマ": "={{ $('Google Sheets Trigger').item.json['投稿テーマ'] }}",
+            "ステータス": "=Ready",
+            "投稿内容": "={{ $('AI Agent').item.json.output }}",
+            "画像URL": "={{ $('Create an object').item.json.mediaLink }}"
+          },
+          "matchingColumns": [
+            "投稿テーマ"
+          ],
+          "schema": [
+            {
+              "id": "ステータス",
+              "displayName": "ステータス",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "日時",
+              "displayName": "日時",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "投稿テーマ",
+              "displayName": "投稿テーマ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "投稿内容",
+              "displayName": "投稿内容",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "画像URL",
+              "displayName": "画像URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "投稿ID",
+              "displayName": "投稿ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1504,
+        0
+      ],
+      "id": "3d0c871c-5ac3-4b80-8a44-296f198e332b",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        384
+      ],
+      "id": "1d2abe77-db11-403e-bf49-b4d177f955dd",
+      "name": "Wait",
+      "webhookId": "f14b8ec1-f59a-42b0-a4b3-3ebb4068dfd3"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        400
+      ],
+      "id": "80d280bc-75cf-4f1d-97a6-7513910d760b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU",
+          "mode": "list",
+          "cachedResultName": "Threads投稿管理",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "投稿一覧",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ステータス",
+              "lookupValue": "Ready"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        400
+      ],
+      "id": "1cddc9f8-5212-41f4-b49e-82bd62921c01",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU",
+          "mode": "list",
+          "cachedResultName": "Threads投稿管理",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "投稿一覧",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19lPuk0-ba3pgtZye1z5aWsXEJRORccGLSmw88YFK8gU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "投稿テーマ": "={{ $('Get row(s) in sheet1').item.json['投稿テーマ'] }}",
+            "ステータス": "Done"
+          },
+          "matchingColumns": [
+            "投稿テーマ"
+          ],
+          "schema": [
+            {
+              "id": "ステータス",
+              "displayName": "ステータス",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "日時",
+              "displayName": "日時",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "投稿テーマ",
+              "displayName": "投稿テーマ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "投稿内容",
+              "displayName": "投稿内容",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "画像URL",
+              "displayName": "画像URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "投稿ID",
+              "displayName": "投稿ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        384
+      ],
+      "id": "86c75439-3e7f-45a3-8f65-ba67e7420034",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c742b6aa-9080-41a5-b292-b272ab7dba1c",
+              "leftValue": "={{ $json['日時'] }}",
+              "rightValue": "={{ DateTime.now().format(\"yyyy/MM/dd\") }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        400
+      ],
+      "id": "2e01bb90-2c3f-49b2-b667-93f86f582954",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        352,
+        0
+      ],
+      "id": "a2b691a4-8461-4cbd-824d-dfc3ab40b987",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "content": "## テーマ入力するだけで自動で投稿文章と画像を生成するワークフロー",
+        "height": 384,
+        "width": 1728
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "afac4851-e6a3-4881-93a2-428368aa31ba",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 指定日時に自動でThreadsに投稿するワークフロー",
+        "height": 272,
+        "width": 1360,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "7794bd03-b462-48d9-95a9-f1578cde45f6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7817c9b7-beb4-43b6-a878-6409eab9b503",
+              "leftValue": "={{ $json['ステータス'] }}",
+              "rightValue": "Todo",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        0
+      ],
+      "id": "844382d2-cff8-41b8-ac25-fd5567ee1f1b",
+      "name": "If2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Create an object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an object": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "37029aef-3a43-4caa-b419-680d56ed2091",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "tq2VJlwsFjFLd7Jj",
+  "tags": []
+}

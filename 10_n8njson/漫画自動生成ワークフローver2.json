@@ -1,0 +1,391 @@
+{
+  "name": "漫画自動生成ワークフロー",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# 命令書\n\nあなたは「世界的なヒット作を手掛ける優秀な漫画編集者兼、ネーム作家」です。\n私が提供する【物語のあらすじ】を元に、読者を惹きつける魅力的な「漫画の構成案（ネーム）」「漫画のタイトル」を作成してください。\n\n# 制約条件\n- 漫画の形式：日本の漫画スタイル（右開き想定）\n- ページ配分：物語のテンポを考慮し、見せ場（決めゴマ）を意識したページ配分を行うこと。\n- 視覚的演出：カメラアングル（ロング、アップ、俯瞰、アオリなど）を多様にし、単調にならないようにすること。\n- 出力形式：以下の表形式で出力すること。\n- 各ページは3,4コマまでとすること。\n- ページ数は{{ $json['ページ数'] }}ページでまとめてください。\n- 日本語で出力して下さい\n\n# 出力フォーマット（Markdownの表形式）\n| ページ-コマ | シーン詳細・構図 (Visual Description) | セリフ・擬音 (Dialogue/SFX) | 画像生成用プロンプトのヒント (English Keywords) |\n| :--- | :--- | :--- | :--- |\n| **P1-1** | （例：大コマ。荒廃した都市の全景。空は暗く、風が吹いている。） | （例：モノローグ「世界は終わっていた」<br>SFX: ヒュオォォ…） | （例：Ruined city, wide shot, cinematic lighting, dark sky） |\n| ... | ... | ... | ... |\n\n# 評価基準\n1. **「めくり」の意識：** ページの最後のコマで「次が気になる」ヒキを作ること。\n2. **「タメ」と「解放」：** 重要なシーンは大ゴマや見開きを使い、メリハリをつけること。\n3. **具体的描写：** 画像生成AIへの指示出しを想定し、キャラクターの表情や光の演出を具体的に書くこと。\n\n# 入力する物語\n{{ $json['物語の概要'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        -16
+      ],
+      "id": "66420991-e654-4fee-937c-46bb9f17aecd",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "物語を入力してください",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "物語の概要",
+              "fieldType": "textarea",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "ページ数",
+              "fieldType": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -832,
+        -16
+      ],
+      "id": "d36da465-f235-4948-a2a3-625da0dac02d",
+      "name": "On form submission",
+      "webhookId": "0e7e25ff-cad6-420d-89d5-7daaf6888e95"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=下記漫画の構成をもとに各ページの画像を生成するプロンプトを作成してください ページ毎にプロンプトを配列形式で出力してほしいです レイアウトは漫画のように分割させてください 日本語のプロンプトにしてください\n\n{{ $json.content.parts[0].text }}\n\n出力例(それぞれの項目をYAML形式で出力してください)\nbase_manga\nYAML\n\nmanga_script:\n  format: \"全4ページ、ダイレクトメール広告漫画形式\"\n  page_format: \"漫画本B6判\"\n  aspect_ratio: \"約1:1.43\"\n\n  global_definitions:\n    art_style: \"学習教材の広告漫画スタイル、わかりやすく大げさな感情表現、明るい色彩、希望に満ちた雰囲気\"\n    setting:\n      location: \"放課後の教室\"\n      atmosphere: \"夕暮れ時、テスト返却後の悲喜こもごも\"\ncharacter\nYAML\n\ncharacters:\n  - id: \"kenta\"\n    name: \"健太\"\n    role: \"悩み多き主人公\"\n    appearance:\n      hair: \"短髪、少しボサボサ\"\n      eyes: \"今は絶望に染まっている\"\n      clothing: \"サッカー部のユニフォームまたは学生服。汗をかいている。全ページ共通\"\n  - id: \"daiki\"\n    name: \"大樹\"\n    role: \"成功した友人\"\n    appearance:\n      hair: \"爽やかなスポーツ刈り\"\n      eyes: \"自信に満ち溢れている\"\n      clothing: \"学生服、清潔感がある。片手にタブレット端末を持っている。全ページ共通\"\nprompt\nYAML\n\npanels:\n  - panel_number: 1\n    layout: \"ミディアムショット\"\n    visual_description: \"健太がテスト用紙を両手で持ち、頭を抱えて絶叫している。テスト用紙には赤字で『35点』と書かれている。背景に稲妻のエフェクト。\"\n    characters:\n      - id: \"kenta\"\n        action: \"テストを見て震える\"\n        expression: \"この世の終わりのような絶望顔\"\n    dialogue:\n      - speaker: \"kenta\"\n        text: \"うわあああ！ また赤点だ…！！\"\n      - speaker: \"kenta\"\n        text: \"部活が忙しくて勉強する時間なんてないよ～！ 母ちゃんに怒られる～！！\"\n  - panel_number: 2\n    layout: \"ツーショット\"\n    visual_description: \"大樹が涼しい顔で自分のテスト用紙（90点）をヒラヒラさせる。健太がそれを食い入るように見る。\"\n    characters:\n      - id: \"daiki\"\n        action: \"余裕の笑みでテストを見せる\"\n        expression: \"ドヤ顔だが爽やか\"\n      - id: \"kenta\"\n        action: \"大樹に詰め寄る\"\n        expression: \"驚愕と羨望\"\n    dialogue:\n      - speaker: \"daiki\"\n        text: \"俺は今回90点だったぜ。\"\n      - speaker: \"kenta\"\n        text: \"ええっ！？ 大樹、お前俺と同じで毎日遅くまで部活やってるじゃん！ なんで！？\"\n  - panel_number: 3\n    layout: \"クローズアップ\"\n    visual_description: \"大樹がババン！とタブレット端末（または赤ペンの入ったテキスト）を取り出す。背景にキラキラした集中線と『1日15分』の文字。\"\n    characters:\n      - id: \"daiki\"\n        action: \"教材をカメラ目線で突き出す\"\n        expression: \"自信満々のウィンク\"\n    dialogue:\n      - speaker: \"daiki\"\n        text: \"実は…これを使ってるんだ！\"\n      - speaker: \"daiki\"\n        text: \"『スキマ時間』にタブレットで要点だけ復習！ AIがニガテを分析してくれるから効率最強なんだ！\"\n      - speaker: \"kenta\"\n        text: \"そ、それなら俺にもできるかも…！？\"",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -416,
+        -16
+      ],
+      "id": "674fdd8e-9a7f-4716-94ea-e650277b813d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n    \"title\": \"漫画のタイトルを出力\",\n    \"base_manga\": \"base_mangaの出力\",\n    \"character\": \"キャラクターの出力\",\n\t\"prompt\": [\"ページ１のプロンプト\", \"ページ２のプロンプト\", \"ページ３のプロンプト\", \"ページ4のプロンプト\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        112
+      ],
+      "id": "dcda6b6e-475b-4402-8c5e-cd199d744656",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        112
+      ],
+      "id": "2a47e17e-249a-4e1f-a145-3b84fce83b46",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.output.title }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1pyEhCNUkIZ95XF3zE4l786AZOYKhM87k",
+          "mode": "list",
+          "cachedResultName": "漫画自動生成ワークフロー",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1pyEhCNUkIZ95XF3zE4l786AZOYKhM87k"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -816,
+        336
+      ],
+      "id": "8c62afd9-80c8-44fe-ac06-2e4e29c9bc83",
+      "name": "Create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "prompts",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        336
+      ],
+      "id": "25b23a08-e209-4609-9ddc-2e9172c131d5",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "877bbbf7-8822-4e64-b3c7-b93b114cbcc7",
+              "name": "prompts",
+              "value": "={{ $('AI Agent').item.json.output.prompt }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -688,
+        336
+      ],
+      "id": "e4e7a552-b1a3-4d6b-87f0-2efa45b171a0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "name": "=image{{ $runIndex }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -256,
+        336
+      ],
+      "id": "80b8017b-dd55-4b20-9b12-22b09316b462",
+      "name": "Upload file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-image-preview",
+          "mode": "id"
+        },
+        "prompt": "=下記プロンプトをもとに漫画ページを作成してください\n\n{{ $json.prompts }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        336
+      ],
+      "id": "256b5dae-1a82-4efa-94f2-d1b931f9acbf",
+      "name": "Generate an image1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 漫画構成とプロンプト作成",
+        "height": 352,
+        "width": 784
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "3660e2ae-4f92-4ecf-aefb-20fefbf357f8",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 漫画画像生成",
+        "height": 256,
+        "width": 784,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "55e6140d-e222-4129-ae7b-f0cd2215d645",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Generate an image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file1": {
+      "main": [
+        []
+      ]
+    },
+    "Generate an image1": {
+      "main": [
+        [
+          {
+            "node": "Upload file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cc7c0469-3510-4aa3-a339-b8150ab93c92",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "mztbLaiysRZEKxuw",
+  "tags": []
+}

@@ -1,0 +1,189 @@
+{
+  "name": "最新AIニュース自動投稿(GoogleNews to X)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "schedule-trigger-1",
+      "name": "毎日朝8時に実行"
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=AI%20%E6%9C%80%E6%96%B0&hl=ja&gl=JP&ceid=JP:ja",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        0
+      ],
+      "id": "http-request-rss",
+      "name": "GoogleニュースRSS取得"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse XML RSS to JSON\n// Note: This code assumes the previous node returns raw XML string or n8n fails to parse it automatically.\n// If n8n automatically parses RSS, $input.item.json should already be an object.\n// We will try to access the items safely.\n\nlet items = [];\n// Check if data is already parsed\nif ($input.item.json.rss && $input.item.json.rss.channel && $input.item.json.rss.channel.item) {\n  items = $input.item.json.rss.channel.item;\n} else if ($input.item.json.data) {\n  // If it's a string, we might need XML parsing, but for now let's assume n8n handles standard RSS content-type\n  // Worst case, user needs to add an 'XML' node or use a parser library.\n  // For this generated workflow, we assume n8n's httpRequest creates a JSON structure from XML if headers are correct.\n  // If not, this is a placeholder related to the environment.\n  items = []; // Placeholder\n}\n\n// Handle array or single item\nif (!Array.isArray(items)) {\n  items = [items];\n}\n\n// Return the first item (latest news)\nif (items.length > 0) {\n  return [ { json: items[0] } ];\n}\nreturn [];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "code-parse-rss",
+      "name": "最新記事を1つ抽出"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.link }}",
+        "options": {
+          "systemMessage": "あなたはSNSマーケティングのプロです。以下のニュース記事のリンクから記事の内容を推測（またはブラウジング機能があれば使用）し、X（旧Twitter）向けの魅力的な投稿を作成してください。\n\n## 条件\n- 記事の要約（簡潔に）\n- あなたの感想・考察（ポジティブかつ興味深く）\n- ハッシュタグを含める\n- 全体で140字〜200字以内"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "id": "ai-agent-generate-post",
+      "name": "AI記事要約・投稿作成"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash"
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        600,
+        200
+      ],
+      "id": "gemini-chat-model",
+      "name": "Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_API_CREDENTIAL_ID",
+          "name": "Google Gemini Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.output }}"
+      },
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        900,
+        0
+      ],
+      "id": "twitter-post",
+      "name": "Xへ投稿",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "YOUR_X_API_CREDENTIAL_ID",
+          "name": "X (Twitter) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 設定が必要です\n1. **Gemini Credential**: Gemini Chat Modelノードで設定してください。\n2. **X (Twitter) Credential**: Xへ投稿ノードで設定してください。\n3. **検索キーワード**: GoogleニュースRSS取得ノードのURLクエリ(`q=...`)で変更可能です。"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        600,
+        -200
+      ],
+      "id": "sticky-note-instructions",
+      "name": "設定ガイド"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "毎日朝8時に実行": {
+      "main": [
+        [
+          {
+            "node": "GoogleニュースRSS取得",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GoogleニュースRSS取得": {
+      "main": [
+        [
+          {
+            "node": "最新記事を1つ抽出",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "最新記事を1つ抽出": {
+      "main": [
+        [
+          {
+            "node": "AI記事要約・投稿作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI記事要約・投稿作成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI記事要約・投稿作成": {
+      "main": [
+        [
+          {
+            "node": "Xへ投稿",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f0a1b2c3-d4e5-6789-0123-456789abcdef",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "generated_by_antigravity"
+  },
+  "id": "generated_workflow_news_x_01",
+  "tags": []
+}

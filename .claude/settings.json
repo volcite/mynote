@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//g/マイドライブ/こまAI/**)",
+      "WebFetch(domain:brain-market.com)",
+      "WebFetch(domain:x.com)",
+      "WebSearch",
+      "WebFetch(domain:note.com)",
+      "Bash(find /g/マイドライブ/こまAI/MyNote -type f -name *.py -o -name *.sh -o -name *.json -o -name *.yaml -o -name *.yml -o -name *.env* -o -name *.txt -o -name *.md)",
+      "Bash(find /g/マイドライブ/こまAI/MyNote/x-automation -type f \\\\\\(-name *.py -o -name *.sh -o -name *.json -o -name *.yaml -o -name *.yml -o -name *.env* -o -name *.md -o -name *.txt -o -name *.js -o -name *.ts \\\\\\))",
+      "Read(//g/マイドライブ/こまアI/MyNote/x-automation/scripts/**)",
+      "Bash(ls \"g:/マイドライブ/こまAI/MyNote/x-automation/scripts/pipeline_\"*)"
+    ]
+  }
+}

@@ -1,0 +1,668 @@
+{
+    "name": "Instagramリール自動投稿ワークフロー",
+    "nodes": [
+        {
+            "parameters": {
+                "content": "## Instagramリール自動投稿ワークフロー\n\n### 処理フロー\n1. 毎朝7時に実行\n2. スプシから「Todo」ステータスのテーマを取得\n3. AIが台本を作成\n4. Geminiで動画生成\n5. Google Cloud Storageに保存（公開URL取得）\n6. Instagramリールに投稿\n7. スプシのステータスを「Done」に更新\n\n### 事前準備\n- スプシに「ステータス」「テーマ」「投稿日時」「投稿ID」列を作成\n- Instagram Graph API の設定\n- Google Cloud Storageバケットの作成",
+                "height": 300,
+                "width": 500
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -48,
+                -300
+            ],
+            "typeVersion": 1,
+            "id": "note-instagram-001",
+            "name": "ワークフロー説明"
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "triggerAtHour": 7
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                0,
+                0
+            ],
+            "id": "trigger-schedule-001",
+            "name": "毎朝7時に実行"
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "YOUR_SPREADSHEET_ID",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "動画管理",
+                    "mode": "name"
+                },
+                "filtersUI": {
+                    "values": [
+                        {
+                            "lookupColumn": "ステータス",
+                            "lookupValue": "Todo"
+                        }
+                    ]
+                },
+                "options": {
+                    "returnFirstMatch": true
+                }
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                200,
+                0
+            ],
+            "id": "sheets-get-001",
+            "name": "テーマ取得",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+                    "name": "YOUR_GOOGLE_SHEETS_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "condition-check-001",
+                            "leftValue": "={{ $json['テーマ'] }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEmpty"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                400,
+                0
+            ],
+            "id": "if-check-001",
+            "name": "テーマ存在確認"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=あなたはショート動画のプロデューサーです。\n以下のテーマで、15〜30秒のInstagramリール用の動画台本を作成してください。\n\n# テーマ\n{{ $json['テーマ'] }}\n\n# 台本の構成\n1. フック（最初の3秒で視聴者を引きつける）\n2. メインメッセージ（核心となる情報やストーリー）\n3. CTA（アクションを促す一言）\n\n# 制約条件\n- 縦型動画（9:16）向けに設計\n- テキストオーバーレイで重要なポイントを強調\n- 視覚的に魅力的なシーン構成\n- BGMのタイミング指示\n\n# 出力形式（JSON）\n{\n  \"hook\": \"最初の3秒の内容\",\n  \"main_scenes\": [\n    {\"time\": \"0-3秒\", \"visual\": \"映像内容\", \"text\": \"画面に表示するテキスト\"},\n    {\"time\": \"3-10秒\", \"visual\": \"映像内容\", \"text\": \"画面に表示するテキスト\"},\n    {\"time\": \"10-20秒\", \"visual\": \"映像内容\", \"text\": \"画面に表示するテキスト\"}\n  ],\n  \"cta\": \"最後のアクション誘導\",\n  \"video_prompt\": \"Gemini動画生成用の英語プロンプト（縦型で視覚的に魅力的な動画）\",\n  \"caption\": \"投稿用キャプション（日本語、改行含む）\",\n  \"hashtags\": \"#タグ1 #タグ2 #タグ3 #タグ4 #タグ5\"\n}",
+                "hasOutputParser": true,
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2.2,
+            "position": [
+                600,
+                0
+            ],
+            "id": "agent-script-001",
+            "name": "台本・ハッシュタグ生成"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                600,
+                200
+            ],
+            "id": "gemini-model-001",
+            "name": "Google Gemini Chat Model",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "YOUR_GEMINI_API_CREDENTIAL_ID",
+                    "name": "YOUR_GEMINI_API_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsonSchemaExample": "{\n  \"hook\": \"最初の3秒の内容\",\n  \"main_scenes\": [\n    {\"time\": \"0-3秒\", \"visual\": \"映像内容\", \"text\": \"画面に表示するテキスト\"}\n  ],\n  \"cta\": \"最後のアクション誘導\",\n  \"video_prompt\": \"英語の動画生成プロンプト\",\n  \"caption\": \"投稿用キャプション\",\n  \"hashtags\": \"#タグ1 #タグ2\"\n}"
+            },
+            "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+            "typeVersion": 1.3,
+            "position": [
+                750,
+                200
+            ],
+            "id": "parser-001",
+            "name": "構造化出力パーサー"
+        },
+        {
+            "parameters": {
+                "resource": "video",
+                "operation": "generate",
+                "modelId": {
+                    "__rl": true,
+                    "value": "models/veo-2.0-generate-001",
+                    "mode": "list",
+                    "cachedResultName": "models/veo-2.0-generate-001"
+                },
+                "prompt": "={{ $json.output.video_prompt }}. Vertical video format (9:16 aspect ratio), vibrant colors, engaging motion, suitable for Instagram Reels, 15-30 seconds duration.",
+                "options": {
+                    "aspectRatio": "9:16",
+                    "personGeneration": "allow_adult"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.googleGemini",
+            "typeVersion": 1,
+            "position": [
+                800,
+                0
+            ],
+            "id": "gemini-video-001",
+            "name": "動画生成（Gemini Veo）",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "YOUR_GEMINI_API_CREDENTIAL_ID",
+                    "name": "YOUR_GEMINI_API_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "amount": 60
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                1000,
+                0
+            ],
+            "id": "wait-001",
+            "name": "動画生成待機（60秒）",
+            "webhookId": "wait-video-001"
+        },
+        {
+            "parameters": {
+                "resource": "object",
+                "operation": "create",
+                "bucketName": "YOUR_GCS_BUCKET_NAME",
+                "objectName": "=instagram_reel_{{ DateTime.now().toFormat('yyyyMMdd_HHmmss') }}.mp4",
+                "createData": {},
+                "createQuery": {},
+                "encryptionHeaders": {},
+                "requestOptions": {}
+            },
+            "type": "n8n-nodes-base.googleCloudStorage",
+            "typeVersion": 1,
+            "position": [
+                1200,
+                0
+            ],
+            "id": "gcs-upload-001",
+            "name": "GCSにアップロード",
+            "credentials": {
+                "googleCloudStorageOAuth2Api": {
+                    "id": "YOUR_GCS_CREDENTIAL_ID",
+                    "name": "YOUR_GCS_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "set-user-id",
+                            "name": "instagram_user_id",
+                            "value": "YOUR_INSTAGRAM_USER_ID",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-video-url",
+                            "name": "video_url",
+                            "value": "={{ $json.mediaLink }}",
+                            "type": "string"
+                        },
+                        {
+                            "id": "set-caption",
+                            "name": "caption",
+                            "value": "={{ $('台本・ハッシュタグ生成').item.json.output.caption }}\n\n{{ $('台本・ハッシュタグ生成').item.json.output.hashtags }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                1400,
+                0
+            ],
+            "id": "set-instagram-001",
+            "name": "Instagram投稿設定"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://graph.facebook.com/v18.0/{{ $json.instagram_user_id }}/media",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpQueryAuth",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "media_type",
+                            "value": "REELS"
+                        },
+                        {
+                            "name": "video_url",
+                            "value": "={{ $json.video_url }}"
+                        },
+                        {
+                            "name": "caption",
+                            "value": "={{ $json.caption }}"
+                        },
+                        {
+                            "name": "share_to_feed",
+                            "value": "true"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1600,
+                0
+            ],
+            "id": "http-instagram-media-001",
+            "name": "Instagramメディアコンテナ作成",
+            "credentials": {
+                "httpQueryAuth": {
+                    "id": "YOUR_INSTAGRAM_ACCESS_TOKEN_ID",
+                    "name": "YOUR_INSTAGRAM_ACCESS_TOKEN_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "amount": 30
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                1800,
+                0
+            ],
+            "id": "wait-002",
+            "name": "アップロード待機（30秒）",
+            "webhookId": "wait-upload-001"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=https://graph.facebook.com/v18.0/{{ $('Instagram投稿設定').item.json.instagram_user_id }}/media_publish",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpQueryAuth",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "creation_id",
+                            "value": "={{ $('Instagramメディアコンテナ作成').item.json.id }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2000,
+                0
+            ],
+            "id": "http-instagram-publish-001",
+            "name": "Instagram投稿実行",
+            "credentials": {
+                "httpQueryAuth": {
+                    "id": "YOUR_INSTAGRAM_ACCESS_TOKEN_ID",
+                    "name": "YOUR_INSTAGRAM_ACCESS_TOKEN_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "appendOrUpdate",
+                "documentId": {
+                    "__rl": true,
+                    "value": "YOUR_SPREADSHEET_ID",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "動画管理",
+                    "mode": "name"
+                },
+                "columns": {
+                    "mappingMode": "defineBelow",
+                    "value": {
+                        "テーマ": "={{ $('テーマ取得').item.json['テーマ'] }}",
+                        "ステータス": "Done",
+                        "投稿日時": "={{ DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss') }}",
+                        "投稿ID": "={{ $json.id }}",
+                        "キャプション": "={{ $('Instagram投稿設定').item.json.caption }}"
+                    },
+                    "matchingColumns": [
+                        "テーマ"
+                    ],
+                    "schema": [
+                        {
+                            "id": "テーマ",
+                            "displayName": "テーマ",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "ステータス",
+                            "displayName": "ステータス",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "投稿日時",
+                            "displayName": "投稿日時",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "投稿ID",
+                            "displayName": "投稿ID",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        },
+                        {
+                            "id": "キャプション",
+                            "displayName": "キャプション",
+                            "required": false,
+                            "defaultMatch": false,
+                            "display": true,
+                            "type": "string",
+                            "canBeUsedToMatch": true
+                        }
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4.7,
+            "position": [
+                2200,
+                0
+            ],
+            "id": "sheets-update-001",
+            "name": "ステータス更新",
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+                    "name": "YOUR_GOOGLE_SHEETS_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "content": "## ステップ1: スプシからテーマ取得\n「Todo」ステータスのテーマを1件取得",
+                "height": 80,
+                "width": 250,
+                "color": 4
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                150,
+                -100
+            ],
+            "typeVersion": 1,
+            "id": "note-step1",
+            "name": "ステップ1説明"
+        },
+        {
+            "parameters": {
+                "content": "## ステップ2: AI台本生成\n台本、キャプション、ハッシュタグを生成",
+                "height": 80,
+                "width": 250,
+                "color": 5
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                550,
+                -100
+            ],
+            "typeVersion": 1,
+            "id": "note-step2",
+            "name": "ステップ2説明"
+        },
+        {
+            "parameters": {
+                "content": "## ステップ3: 動画生成\nGemini Veoで縦型動画を生成",
+                "height": 80,
+                "width": 200,
+                "color": 6
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                780,
+                -100
+            ],
+            "typeVersion": 1,
+            "id": "note-step3",
+            "name": "ステップ3説明"
+        },
+        {
+            "parameters": {
+                "content": "## ステップ4: Instagram投稿\nリールとして投稿",
+                "height": 80,
+                "width": 450,
+                "color": 3
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                1550,
+                -100
+            ],
+            "typeVersion": 1,
+            "id": "note-step4",
+            "name": "ステップ4説明"
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "毎朝7時に実行": {
+            "main": [
+                [
+                    {
+                        "node": "テーマ取得",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "テーマ取得": {
+            "main": [
+                [
+                    {
+                        "node": "テーマ存在確認",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "テーマ存在確認": {
+            "main": [
+                [
+                    {
+                        "node": "台本・ハッシュタグ生成",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "台本・ハッシュタグ生成": {
+            "main": [
+                [
+                    {
+                        "node": "動画生成（Gemini Veo）",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "台本・ハッシュタグ生成",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "構造化出力パーサー": {
+            "ai_outputParser": [
+                [
+                    {
+                        "node": "台本・ハッシュタグ生成",
+                        "type": "ai_outputParser",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "動画生成（Gemini Veo）": {
+            "main": [
+                [
+                    {
+                        "node": "動画生成待機（60秒）",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "動画生成待機（60秒）": {
+            "main": [
+                [
+                    {
+                        "node": "GCSにアップロード",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "GCSにアップロード": {
+            "main": [
+                [
+                    {
+                        "node": "Instagram投稿設定",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Instagram投稿設定": {
+            "main": [
+                [
+                    {
+                        "node": "Instagramメディアコンテナ作成",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Instagramメディアコンテナ作成": {
+            "main": [
+                [
+                    {
+                        "node": "アップロード待機（30秒）",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "アップロード待機（30秒）": {
+            "main": [
+                [
+                    {
+                        "node": "Instagram投稿実行",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Instagram投稿実行": {
+            "main": [
+                [
+                    {
+                        "node": "ステータス更新",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "instagram-reels-auto-v1",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "placeholder"
+    },
+    "id": "instagram-reels-auto-001",
+    "tags": []
+}

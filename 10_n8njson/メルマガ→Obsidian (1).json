@@ -1,0 +1,186 @@
+{
+  "name": "メルマガ→Obsidian",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -16
+      ],
+      "id": "5759565c-216a-4a85-9874-6c042f006fe2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "q": "ここにメルマガの送信元メールアドレスを入れて検索する"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        -16
+      ],
+      "id": "8b15464d-2729-44aa-b5c6-a05d6165b4bd",
+      "name": "Get many messages",
+      "webhookId": "fcbcfb0b-7648-466d-999e-0f334275d623",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PcRdPLdfCC6o3PIj",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-pro-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# 依頼内容\nあなたはプロフェッショナルなダイレクトレスポンス・コピーライター兼マーケティング分析官です。\n以下に入力される【カンマ（,）区切りの複数のメルマガ文章】をすべて読み込み、分析してください。\n\nこれらの文章はトップレベルのコピーライターによって書かれたものです。\nこの文章群を分析し、私が自分のLINEやメルマガのステップ配信を構築する際に使える「普遍的なノウハウ・知識」としてまとめてください。\n\n# 制約事項\n1. **具体的なトピックの除外**: 文章の具体的な内容（商品名、業界、固有名詞、特定の話題）は分析しないでください。それらは無視してください。\n2. **構造と心理の抽出**: 「なぜ読まれるのか」「なぜ欲しくなるのか」という「文章の構造」と「心理テクニック」だけを抽出してください。\n3. **ステップ配信への最適化**: 単発の文章としてではなく、複数通の流れの中でどのように信頼を構築し、行動へ促しているか（全体設計）を分析してください。\n4. **即実践可能な形式**: 分析結果は、私がすぐに使える「知識」や「チェックリスト」の形で出力してください。\n\n# 入力テキスト（メルマガ）\n{{ $json.snippet }}\n\n# 分析・出力項目\n\n以下の4つのセクションで出力してください。\n\n## 1. 全体構造の解剖（マクロ視点）\n一連の流れとして、読者の心理状態をA地点からB地点へどう移動させているか？\n* **各通の役割定義**:\n    * 1通目: [役割] - [狙い]\n    * 2通目: [役割] - [狙い]\n    * ...\n* **伏線と回収**: 序盤でどのような「種（オープンループ）」をまき、どこで回収しているか？\n\n## 2. 没入させる文章テクニック（ミクロ視点）\n読者を離脱させないための具体的なライティング技術は何か？\n* **オープニング**: 無関心な読者を一瞬で惹きつける「書き出し」のパターン。\n* **リズムと間**: 改行、短文、接続詞の使い方など、読み進めさせるための工夫。\n* **ブリッジ**: 次のメールを読ませるための「引き」の作り方。\n\n## 3. 信頼構築と教育の心理学\n「売り込み」と感じさせずに、どのように欲求を高めているか？\n* **権威性の提示**: 嫌味なく「先生」としてのポジションを確立する方法。\n* **価値観の変容**: 読者の常識（パラダイム）を破壊し、新しい価値観を植え付ける論理展開。\n\n## 4. 自分用ステップ配信構築テンプレート\nこの分析に基づき、私がステップメールを書く際に埋めるべきテンプレートを作成してください。\n* 構成案の型\n* 各パートで必ず入れるべき要素のチェックリスト"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        -16
+      ],
+      "id": "b3cb95ba-5de6-428e-9a1e-d0747a39bacc",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "wt52g7f3iiKdOPpP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "snippet"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "6adac963-fc18-44ed-b603-a8b943945540",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.content.parts[0].text }}",
+        "name": "メルマガ分析.md",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "root",
+          "mode": "list",
+          "cachedResultName": "/ (Root folder)",
+          "cachedResultUrl": "https://drive.google.com/drive"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        592,
+        -16
+      ],
+      "id": "879f8479-0f7b-48a8-9ad7-7491b3535c72",
+      "name": "Create file from text",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "icbVPvqyC58I4T3I",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "0b0c63d9-7442-4d01-b49d-8459f55fb30d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c222c60ed55f26de127f72b6f901dd7755e87d55c9bfa1d37eab15c97c6302bf"
+  },
+  "id": "P9smHxXRP8GfqQbF",
+  "tags": []
+}

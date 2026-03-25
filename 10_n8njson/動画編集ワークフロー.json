@@ -1,0 +1,435 @@
+{
+  "name": "動画編集ワークフロー",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3744,
+        528
+      ],
+      "id": "b9d1a8f0-f8b1-461f-9a4e-18f5a59aa152",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.creatomate.com/v1/renders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"template_id\": \"d2739986-7da0-4a89-9bcd-3d8dea2772ac\",\n  \"modifications\": {\n    \"Video-1\": \"{{ $json.movie1 }}\",\n    \"Video-2\": \"{{ $json.movie2 }}\"\n  }\n}",
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3888,
+        528
+      ],
+      "id": "9a490748-96cb-4231-bac6-f1d504c23603",
+      "name": "HTTP Request11",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "YTT6gavWBOeibxpy",
+          "name": "Createmate"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4032,
+        528
+      ],
+      "id": "b3b73ff4-c938-4675-baf9-f462ab61ad24",
+      "name": "Wait5",
+      "webhookId": "e63f0bc3-34c3-4c82-af45-14f444bf67e8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f190f633-f7fa-4e28-a6aa-261fc0567361",
+              "name": "movie2",
+              "value": "={{ $json.mediaLink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3504,
+        608
+      ],
+      "id": "d3b742c8-6dcc-43ae-aa2c-028e2beb7333",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1ebf09a-ddd4-4306-bcba-0e861dd2f9cc",
+              "name": "movie1",
+              "value": "={{ $json.mediaLink }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3504,
+        448
+      ],
+      "id": "1ff2f349-f0d8-4f1b-92cb-0ecfb07df0c6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "object",
+        "operation": "create",
+        "bucketName": "finsredbag",
+        "objectName": "=image2",
+        "createData": {},
+        "createQuery": {},
+        "encryptionHeaders": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.googleCloudStorage",
+      "typeVersion": 1,
+      "position": [
+        3328,
+        608
+      ],
+      "id": "59a813e3-5660-4bec-9dbf-b248080ab814",
+      "name": "Create an object",
+      "retryOnFail": true,
+      "credentials": {
+        "googleCloudStorageOAuth2Api": {
+          "id": "WlP172F8vY1WwAS7",
+          "name": "Google Cloud Storage account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "object",
+        "operation": "create",
+        "bucketName": "finsredbag",
+        "objectName": "=movie1",
+        "createData": {},
+        "createQuery": {},
+        "encryptionHeaders": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.googleCloudStorage",
+      "typeVersion": 1,
+      "position": [
+        3328,
+        448
+      ],
+      "id": "bc949fae-fce3-437b-9b92-33370d663dd9",
+      "name": "Create an object1",
+      "retryOnFail": true,
+      "credentials": {
+        "googleCloudStorageOAuth2Api": {
+          "id": "WlP172F8vY1WwAS7",
+          "name": "Google Cloud Storage account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "sampleMovie",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Nmpq9ZdP5sXGfwQgOcuwjerYU2Kw9Mss",
+          "mode": "list",
+          "cachedResultName": "n8n動画編集",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Nmpq9ZdP5sXGfwQgOcuwjerYU2Kw9Mss"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4336,
+        528
+      ],
+      "id": "a4670f8b-8e2a-4a2d-be1f-8a11e4b91318",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "動画のテーマを入力してください。",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "テーマ1",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "テーマ2",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        2880,
+        528
+      ],
+      "id": "ace4f079-8ba6-4644-8c9a-30649761320e",
+      "name": "On form submission",
+      "webhookId": "5e913593-8bfd-4156-931c-c307b35686fd"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "modelId": {
+          "__rl": true,
+          "value": "models/veo-2.0-generate-001",
+          "mode": "list",
+          "cachedResultName": "models/veo-2.0-generate-001"
+        },
+        "prompt": "=下記テーマに沿った動画を生成してください。\n\n {{ $json['テーマ1'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        448
+      ],
+      "id": "e61f1b46-ad4c-496e-8516-891b01394bc2",
+      "name": "Generate a video",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "modelId": {
+          "__rl": true,
+          "value": "models/veo-2.0-generate-001",
+          "mode": "list",
+          "cachedResultName": "models/veo-2.0-generate-001"
+        },
+        "prompt": "=下記テーマに沿った動画を生成してください\n\n{{ $json['テーマ2'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        608
+      ],
+      "id": "e3df5ec8-a6bc-4a39-957a-8620a1206a48",
+      "name": "Generate a video1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4192,
+        528
+      ],
+      "id": "018d4cb2-ed3c-494d-a89c-380c4839508c",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request11": {
+      "main": [
+        [
+          {
+            "node": "Wait5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Create an object": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an object1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Generate a video",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate a video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate a video": {
+      "main": [
+        [
+          {
+            "node": "Create an object1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate a video1": {
+      "main": [
+        [
+          {
+            "node": "Create an object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2454b45b-9005-4791-a61d-5b299166c144",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "rjJw1a7ZNGc4KWoi",
+  "tags": []
+}

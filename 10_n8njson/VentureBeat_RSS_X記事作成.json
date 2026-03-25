@@ -1,0 +1,324 @@
+{
+    "name": "VentureBeat RSS 週次まとめ → X記事作成 → メール通知",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "0 7 * * 1"
+                        }
+                    ]
+                }
+            },
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                0,
+                0
+            ],
+            "id": "schedule-trigger-001",
+            "name": "毎週月曜 朝7時に実行"
+        },
+        {
+            "parameters": {
+                "url": "https://venturebeat.com/feed/"
+            },
+            "type": "n8n-nodes-base.rssFeedRead",
+            "typeVersion": 1.1,
+            "position": [
+                220,
+                0
+            ],
+            "id": "rss-feed-001",
+            "name": "VentureBeat RSS取得"
+        },
+        {
+            "parameters": {
+                "jsCode": "// 1週間（7日間）以内の記事のみをフィルタリング\nconst now = new Date();\nconst oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);\n\nconst filteredItems = items.filter(item => {\n  const pubDate = new Date(item.json.pubDate);\n  return pubDate >= oneWeekAgo;\n});\n\n// 記事が0件の場合は空配列を返す\nif (filteredItems.length === 0) {\n  return [{ json: { noArticles: true, message: '過去1週間以内の新着記事はありませんでした。' } }];\n}\n\nreturn filteredItems;"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                440,
+                0
+            ],
+            "id": "code-filter-001",
+            "name": "1週間以内の記事をフィルタ"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "id": "condition-001",
+                            "leftValue": "={{ $json.noArticles }}",
+                            "rightValue": true,
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "notEquals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                660,
+                0
+            ],
+            "id": "if-check-001",
+            "name": "記事があるかチェック"
+        },
+        {
+            "parameters": {
+                "aggregate": "aggregateAllItemData",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.aggregate",
+            "typeVersion": 1,
+            "position": [
+                880,
+                -100
+            ],
+            "id": "aggregate-001",
+            "name": "記事を集約"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "set-001",
+                            "name": "articles_summary",
+                            "value": "={{ $json.data.map((article, index) => `【記事${index + 1}】\\nタイトル: ${article.title}\\nリンク: ${article.link}\\n概要: ${article.contentSnippet || article.content?.substring(0, 200) || 'N/A'}\\n公開日: ${article.pubDate}`).join('\\n\\n---\\n\\n') }}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.4,
+            "position": [
+                1100,
+                -100
+            ],
+            "id": "set-articles-001",
+            "name": "記事情報を整形"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=あなたは優秀なテックライター兼コンテンツクリエイターです。\n\n以下のVentureBeatの過去1週間の記事一覧をもとに、日本語でNote/ブログ向けの週次テックニュースまとめ記事を作成してください。\n\n## 記事一覧\n{{ $json.articles_summary }}\n\n## 作成ルール\n1. **マークダウン形式**で記事を作成すること\n2. 読者が興味を持つ**キャッチーなタイトル**を付ける\n3. 導入文で今週のテック業界の動向を簡潔にまとめる\n4. 各記事について**見出し（##）**を付けて詳しく解説する\n5. 技術的な内容は**わかりやすく噛み砕いて**説明する\n6. 各トピックについて**なぜ重要なのか**、**今後の展望**も含める\n7. 記事の最後に**まとめ**と**筆者の見解**を追加する\n8. 必要に応じて箇条書きや強調（**太字**）を使用して読みやすくする\n9. 文字数は**2000〜4000文字程度**を目安に、十分な情報量を確保する\n\n## 出力形式（マークダウン）\n\n```markdown\n# [キャッチーなタイトル]\n\n## はじめに\n[今週のテック業界の概況を2〜3文で]\n\n---\n\n## 1. [記事1のトピック見出し]\n[記事の詳細解説 - 何が起きたか、なぜ重要か、今後の影響]\n\n## 2. [記事2のトピック見出し]\n[記事の詳細解説]\n\n（以下、重要な記事について同様に続ける）\n\n---\n\n## まとめ\n[今週の重要ポイントを箇条書きで]\n\n## 筆者の見解\n[これらのニュースから読み取れるトレンドや今後の予測]\n\n---\n\n📚 **参考リンク**\n- [記事タイトル1](URL)\n- [記事タイトル2](URL)\n```",
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 2.2,
+            "position": [
+                1320,
+                -100
+            ],
+            "id": "ai-agent-001",
+            "name": "AI Agent - X投稿作成"
+        },
+        {
+            "parameters": {
+                "modelName": "models/gemini-2.0-flash",
+                "options": {
+                    "temperature": 0.7
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                1320,
+                120
+            ],
+            "id": "gemini-model-001",
+            "name": "Google Gemini Chat Model",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "YOUR_GEMINI_API_CREDENTIAL_ID",
+                    "name": "YOUR_GEMINI_API_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "sendTo": "YOUR_EMAIL_ADDRESS",
+                "subject": "=📰 VentureBeat 今週のAI/Tech まとめ投稿案 ({{ new Date().toLocaleDateString('ja-JP') }})",
+                "message": "=おはようございます！\n\n今週のVentureBeat記事から、X投稿用の週次まとめを作成しました。\n\n━━━━━━━━━━━━━━━━━━━━\n📝 AIが作成した投稿案\n━━━━━━━━━━━━━━━━━━━━\n\n{{ $json.output }}\n\n━━━━━━━━━━━━━━━━━━━━\n\n上記内容をご確認の上、必要に応じて編集してXに投稿してください。\n\n※ このメールはn8nワークフローから自動送信されています。"
+            },
+            "type": "n8n-nodes-base.gmail",
+            "typeVersion": 2.2,
+            "position": [
+                1540,
+                -100
+            ],
+            "id": "gmail-send-001",
+            "name": "Gmail - 投稿案を通知",
+            "credentials": {
+                "gmailOAuth2": {
+                    "id": "YOUR_GMAIL_CREDENTIAL_ID",
+                    "name": "YOUR_GMAIL_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "sendTo": "YOUR_EMAIL_ADDRESS",
+                "subject": "📰 VentureBeat - 今週の新着記事なし",
+                "message": "=おはようございます。\n\n今週（{{ new Date().toLocaleDateString('ja-JP') }}）は過去1週間以内のVentureBeat新着記事がありませんでした。\n\n※ このメールはn8nワークフローから自動送信されています。"
+            },
+            "type": "n8n-nodes-base.gmail",
+            "typeVersion": 2.2,
+            "position": [
+                880,
+                100
+            ],
+            "id": "gmail-no-articles-001",
+            "name": "Gmail - 記事なし通知",
+            "credentials": {
+                "gmailOAuth2": {
+                    "id": "YOUR_GMAIL_CREDENTIAL_ID",
+                    "name": "YOUR_GMAIL_CREDENTIAL_NAME"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "content": "## VentureBeat RSS 週次まとめ → X投稿作成ワークフロー\n\n### 処理フロー\n1. 毎週月曜 朝7時に自動実行\n2. VentureBeatのRSSフィードを取得\n3. 過去1週間以内の記事をフィルタリング\n4. AIが記事をX投稿用にまとめ\n5. Gmailで投稿案を通知\n\n### 設定が必要な項目\n- Gemini API認証情報\n- Gmail OAuth2認証情報\n- メール送信先アドレス（YOUR_EMAIL_ADDRESS を置換）",
+                "height": 340,
+                "width": 320,
+                "color": 4
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "typeVersion": 1,
+            "position": [
+                -60,
+                -380
+            ],
+            "id": "sticky-note-001",
+            "name": "ワークフロー説明"
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "毎日朝7時に実行": {
+            "main": [
+                [
+                    {
+                        "node": "VentureBeat RSS取得",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "VentureBeat RSS取得": {
+            "main": [
+                [
+                    {
+                        "node": "24時間以内の記事をフィルタ",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "24時間以内の記事をフィルタ": {
+            "main": [
+                [
+                    {
+                        "node": "記事があるかチェック",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "記事があるかチェック": {
+            "main": [
+                [
+                    {
+                        "node": "記事を集約",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Gmail - 記事なし通知",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "記事を集約": {
+            "main": [
+                [
+                    {
+                        "node": "記事情報を整形",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "記事情報を整形": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent - X投稿作成",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent - X投稿作成",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent - X投稿作成": {
+            "main": [
+                [
+                    {
+                        "node": "Gmail - 投稿案を通知",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "venturebeat-rss-x-article-001",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "placeholder"
+    },
+    "id": "venturebeat-rss-workflow",
+    "tags": []
+}

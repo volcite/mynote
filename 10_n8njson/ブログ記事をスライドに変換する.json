@@ -1,0 +1,246 @@
+{
+  "name": "ブログ記事をスライドに変換する",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "記事のURLを入力してください。",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "記事URL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        0
+      ],
+      "id": "cd6a8f53-4ad3-4f22-80d4-df68a6366438",
+      "name": "On form submission",
+      "webhookId": "91613792-77cc-4444-b119-5b131312bbcb"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# 命令\nあなたはプロのプレゼンテーションデザイナー兼編集者です。\n提供された「ブログ記事」を分析し、要点を抽出して、プレゼンテーション用の「5枚のスライド」に構成し直してください。\n\n# 手順\n1. **記事の理解**: ブログ記事の主題、ターゲット、重要なメッセージを把握してください。\n2. **5分割**: 記事の内容を論理的な流れ（例：導入/課題提起 → 解決策/提案 → 具体例/詳細 → メリット/未来 → 結論/アクション）で5つのセクションに分割してください。\n3. **スライド構成**: 各セクションについて、スライドの「タイトル」と「本文（箇条書き）」を作成してください。\n4. **Nanobanana用プロンプト作成**: 各スライドの内容を視覚的に表現するための、画像生成AI（Nanobanana）用プロンプトを作成してください。\n\n# Nanobanana用プロンプトの要件\n* スライドの概念を象徴する、シンプルでインパクトのあるビジュアルを指示してください。\n* スタイルは「フラットデザイン、ミニマル、未来的、ビジネスライク」など、統一感を持たせてください（指定がなければミニマルなイラスト調としてください）。\n* **言語**: 英語（画像生成において精度が高いため。もし日本語対応ツールであれば日本語に変更可）\n\n# 入力するブログ記事\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "f4580afe-239d-4409-8bb0-bc134a1dd2fe",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        544,
+        144
+      ],
+      "id": "36b74cfe-0976-4aaa-93b1-0637d23be5ee",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "=説明資料・図解のスライドの1ページを作成してください\n\n## タイトル\n{{ $json.title }}\n\n## 内容\n{{ $json.content }}\n\n## プロンプト\n{{ $json.prompt }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "30a44b01-6f84-4fe7-8ba3-2a0f721f0c76",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.slides",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        848,
+        0
+      ],
+      "id": "508b0ec9-dfea-4022-b4ad-eff001075378",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Split Out').item.json.title }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1168,
+        0
+      ],
+      "id": "a648334e-aa84-4688-b540-67b770d6d09d",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json['記事URL'] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Ri8AWCQtDmu1V50C8fBa8VaTwL8q6cRQ",
+          "mode": "list",
+          "cachedResultName": "AI",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Ri8AWCQtDmu1V50C8fBa8VaTwL8q6cRQ"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        384,
+        0
+      ],
+      "id": "ff350892-f7d5-48fe-bd2e-58f5484ad8d9",
+      "name": "Create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Create folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "71eaadf4-d03c-4ad4-b419-d122d6a2e098",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "33f10MGo422pqOJX",
+  "tags": []
+}

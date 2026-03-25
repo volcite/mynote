@@ -1,0 +1,859 @@
+{
+  "name": "Youtube→note,X作成",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// 【設定】前のノードから来るURLの項目名（キー）に合わせて変更してください\n// ※今はテスト用に、データがない場合は指定のURLを使うようにしています\nconst targetUrl = $input.item.json.url || \"https://www.youtube.com/watch?v=UPwTsyLYgfo\";\n\n// --- ID抽出ロジック ---\nfunction getYouTubeId(url) {\n  if (!url) return null;\n  const regExp = /^.*(youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|\\&v=)([^#\\&\\?]*).*/;\n  const match = url.match(regExp);\n  return (match && match[2].length === 11) ? match[2] : null;\n}\n// --------------------\n\n// IDを取得\nconst videoId = getYouTubeId(targetUrl);\n\n// 結果を出力データに追加\n// \"youtube_id\" という名前で次のノードに渡されます\nreturn {\n  json: {\n    original_url: targetUrl,\n    youtube_id: videoId\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        32
+      ],
+      "id": "1af924d2-f56e-460f-aecd-c5bd922d0aa5",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db33130f-ed0b-4359-9ae9-e14764978269",
+              "name": "API_KEY",
+              "value": "6926b815a2066f367f33eb02",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        32
+      ],
+      "id": "4d130240-0538-4ca7-811a-1384b933fd12",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.output.split(\",\")[0] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1o9mPTMCIRlwBoIDNmrH4xT6YXlPQnpzM",
+          "mode": "list",
+          "cachedResultName": "Youtube→note&X作成フォルダ",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1o9mPTMCIRlwBoIDNmrH4xT6YXlPQnpzM"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2000,
+        32
+      ],
+      "id": "a7cb6419-ee40-4dbb-81f1-74b36555d680",
+      "name": "Create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "itemcontent.parts[0].text, item",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        992,
+        400
+      ],
+      "id": "0ae05e09-d258-46e6-81a6-484549bb0c3c",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "content": "文字起こし",
+        "height": 320,
+        "width": 800
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "61806fe2-e982-48e4-bd36-061daa2dcfe0",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "目次作成",
+        "height": 320,
+        "width": 656,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1680,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "2d2f2d64-21db-4222-a7c4-fd42affb08fe",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 256,
+        "width": 1488,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "e589c3fb-6592-4c44-b872-cb64bdc01346",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1168,
+        400
+      ],
+      "id": "058db273-828e-45f1-bd62-eef700f99536",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2160,
+        384
+      ],
+      "id": "2adb98f4-8fa5-4a9a-8683-f9e1eae84faf",
+      "name": "Wait",
+      "webhookId": "25b02265-fd7e-48db-96a9-83293eeccec6"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Loop Over Items').item.json.item }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1984,
+        384
+      ],
+      "id": "392928bc-2362-4c09-9fbf-bd9c40988385",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "fHRUXjsmsN0WsQMR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=【note告知文 作成プロンプト】\nあなたは、読者の興味を引きつけ、クリックを促すプロのSNSコピーライターです。\n以下の#制約条件と#入力情報を基に、note記事へのアクセスを最大化するための告知文章を作成してください\n\n#制約条件\n - 読者の注意を引く、キャッチーな書き出しで始めてください。\n - 記事のテーマと、それが読者にとってなぜ重要なのかを簡潔に提示してください。\n - 記事の本文から、最も興味を引く部分を一部引用または要約して「チラ見せ」してください。\n - その「チラ見せ」した部分の重要性や、それが何を意味するのかを軽く解説し、読者の知的好奇心を刺激してください。\n - 読者が「その先が知りたい！」と思うように、「しかし、本当に重要なポイントは...」「このテクニックの全貌は...」といった言葉で、note記事への期待感を高めてください。\n - 記事の結論や最も重要なノウハウは告知文に含めず、noteで明かす構成にしてください。\n - 最後に、明確なCall to Action（行動喚起）として、note記事へのリンクを促す一文を加えてください。（例：「全文はこちらのnoteで」「続きはこちらから👇」）\n - 投稿文章だけテキスト形式で出力してください\n - 文字数は500文字から1000文字程度で作成してください\n - スマホで見やすいように、適宜改行を入れてください\n - 最初の１文は対象のユーザーが思っている常識を破壊するような内容にしてください。ただし嘘はダメです。\n\n#入力情報\nタイトル:\n{{ $('Edit Fields1').item.json.item[0] }}\n本文:\n{{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        592
+      ],
+      "id": "de0286f6-5c86-44fc-b634-992bcd77c9d5",
+      "name": "X投稿作成"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=あなたは優秀なライターです。私が添付した動画の文字起こしをもとに記事を作成してください。何も知らない初心者でも理解できるように、句構造文法の枠組みを用いて、理解しやすい文章を作成してください。内容は超具体的に書いて。また、自分の過去や体験談、考えなどを記載したものなら、その人が書いたかのように魅力的な文章に仕上げてください。出力は記事の内容だけをマークダウン形式で出力してください。目次は下記のものを使用してください。\n\n#記事構成\n　- リード文はセールスライティングを活用して読者の購読・購入意欲を掻き立てるよう意識\n   - 読者が思わず読み進めてしまうくらいキャッチーで魅力的な目次を作成\n   - 各セクションタイトルは読者の興味を引く工夫をする\n   - 【】や！などの記号を適度に使用し、緩急をつける\n   - 誇張表現は使用するが、虚偽の情報は避ける\n   - 具体的な数字を使用する際は、事実に基づいたものを使用\n\n#記事の特徴\n   - 初心者にもわかりやすい内容\n   - 読者が「脳汁を出す」ほど興奮する内容を目指す\n   - 禁断、極秘、魔法などの刺激的な表現を適度に使用\n\n#注意点\n    - 数字や成果の表現は事実に基づくこと\n    - 読者の興味を引きつつ、信頼性を損なわないバランスを保つ\n　- 2024年以降の最新情報のみを使う\n　- すべての情報を具体的に書く\n　- 分かりづらい部分は例えを用いて書く\n　- 「：」は記事内に使わないで\n　- タイトルは出力しないでください\n\n# 目次（「,」で区切っています。最初の一つ目がタイトルです。）\n{{ $('AI Agent').item.json.output }}\n\n# 文字起こし\n{{ $('Http Request').item.json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        592
+      ],
+      "id": "5fc9ada9-cc98-4f53-a51d-abc04f3a1e2f",
+      "name": "note作成"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=あなたは優秀なライターです。私が添付した動画の文字起こしをもとに記事の目次を作成してください。何も知らない初心者でも理解できるように、内容は超具体的に書いて。手順やhow to系なら記事としての完璧なマニュアルへと仕上げてください。出力は記事の目次だけを半角カンマ（,）区切りのテキストで出力してください。目次以外は出力しないでください。\n\n#記事構成\n   - 読者が思わず読み進めてしまうくらいキャッチーで魅力的な目次を作成\n   - 各セクションタイトルは読者の興味を引く工夫をする\n   - 誇張表現は使用するが、虚偽の情報は避ける\n   - 具体的な数字を使用する際は、事実に基づいたものを使用\n\n#記事の特徴\n   - 初心者にもわかりやすい内容\n   - 禁断、極秘、魔法などの刺激的な表現を適度に使用\n\n#注意点\n    - 数字や成果の表現は事実に基づくこと\n    - 読者の興味を引きつつ、信頼性を損なわないバランスを保つ\n　- 2024年以降の最新情報のみを使う\n　- すべての情報を具体的に書く\n　- 分かりづらい部分は例えを用いて書く\n\n# 出力例\n目次1,目次2,目次3,\n# 文字起こし\n{{ $json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1728,
+        32
+      ],
+      "id": "e35c60ac-7f0b-4213-93e5-b14335ab8c78",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13VbO9sInxsX92zZuNPNsOnJTv4zJjAZqunP0lxPpUn8",
+          "mode": "list",
+          "cachedResultName": "Youtube文字起こし",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13VbO9sInxsX92zZuNPNsOnJTv4zJjAZqunP0lxPpUn8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 923759586,
+          "mode": "list",
+          "cachedResultName": "出力",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13VbO9sInxsX92zZuNPNsOnJTv4zJjAZqunP0lxPpUn8/edit#gid=923759586"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "X": "={{ $json.output }}",
+            "note": "={{ $('note作成').item.json.output }}",
+            "URL": "={{ $('Code in JavaScript').item.json.original_url }}"
+          },
+          "matchingColumns": [
+            "url"
+          ],
+          "schema": [
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "X",
+              "displayName": "X",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1616,
+        592
+      ],
+      "id": "3a5b7590-2c45-49ed-9a43-85c2b9bef828",
+      "name": "スプシにnoteとX投稿を記載",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        976,
+        592
+      ],
+      "id": "dbedd90f-6128-4d1b-9d2b-f8aca5a2401d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 272,
+        "width": 960,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        576
+      ],
+      "typeVersion": 1,
+      "id": "55fa7635-c5ae-440a-88a2-4e19503b1264",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { item: $('AI Agent').item.json.output.split(\",\") } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2144,
+        32
+      ],
+      "id": "171ed872-7574-4492-b061-86b5f992f3cb",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1c1703e0-493d-456c-aa04-8c3a7fb31203",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        416
+      ],
+      "id": "e627ee60-f524-485a-8c95-939aecf71497",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-pro-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        176
+      ],
+      "id": "4c7bdad4-9f11-43fd-b656-fa3a4f0193ab",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-pro-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        720
+      ],
+      "id": "90c3e527-d093-4503-86b6-f0b9bf21e362",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-pro-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        720
+      ],
+      "id": "baaca430-3f01-49d6-9040-ec9c7a5d423a",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        448
+      ],
+      "id": "59fd4fe6-8ac9-4565-bf31-2e77cbf5232b",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-image-preview",
+          "mode": "id"
+        },
+        "prompt": "=視認性の高いサムネイルを作って\nアスペクト比は16:9。\n\n## タイトル\n{{ $('If').item.json.item }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        320
+      ],
+      "id": "d7664ed2-936d-4244-8655-2eebc291611a",
+      "name": "Generate an image1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "YoutubeのURLを入力してください",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "URL",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        992,
+        32
+      ],
+      "id": "592c7619-8b66-4c91-a814-22496d55bcbd",
+      "name": "On form submission",
+      "webhookId": "a6fea806-8d73-4f3c-af44-9376fe9b2781"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.youtube-transcript.io/api/transcripts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ $json.API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ids\": [\"{{ $('Code in JavaScript').item.json.youtube_id }}\"]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        32
+      ],
+      "id": "e9e80137-2e53-4ec3-acda-2920b5304a3b",
+      "name": "Http Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-pro-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=なたは優秀な生成AI画像クリエイターかつ、目次の画像を作成したいです。\n\n下記目次を連想するキーワードを3つ選定して、そのキーワードにあう画像生成プロンプトを作成してください。英文プロンプトのみテキストで出力してください。\n\n# 手順\n- 目次を連想するキーワードを3つ選定する\n- そのキーワードにあう画像が出力されるプロンプトを作成する\n- 作成したプロンプトだけ出力する\n\n# 注意事項\n- キーワードは出力しないでください\n- ブログにふさわしい画像を出力するプロンプトにしてください\n- サイズは16:9で生成すること\n\n# 出力形式\n英語プロンプトのみ\n\n# 目次\n {{ $json.item }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        448
+      ],
+      "id": "07b66960-adbe-4f61-838b-ef9683719c88",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6PIwoeeLdra9Gfc7",
+          "name": "Google Gemini(PaLM) Api account aiyorozuya"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Http Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "X投稿作成": {
+      "main": [
+        [
+          {
+            "node": "スプシにnoteとX投稿を記載",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "note作成": {
+      "main": [
+        [
+          {
+            "node": "X投稿作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "note作成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Generate an image1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "note作成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "X投稿作成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image1": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "スプシにnoteとX投稿を記載": {
+      "main": [
+        []
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Http Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "837304cf-9768-4da3-a178-c0870c07425f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "4sCHL4UDRvOTkYBw",
+  "tags": []
+}

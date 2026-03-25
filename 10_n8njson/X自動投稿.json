@@ -1,0 +1,1064 @@
+{
+  "name": "X自動投稿",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=あなたは調査の専門家です。\n海外の「{{ $('Edit Fields4').item.json.search_word }}」に関する最新技術情報をできるだけ詳しく詳細に調査してください\n\n## 手順\n1. Search in Tavilyを使用して関連するURLをリストアップする\n2. Extract in Tavilyを使用してコンテンツを取得し情報をまとめる \n3. 調査結果を出力してください\n\n## 注意\n・SNSでバズりそうなニュースをピックアップしてください\n・海外のサイトから最新情報を取得してください\n・出力するときは日本語で理解できる文章にしてください\n・可能な限り具体的に調査してください。ノウハウやテクニック、だれでも実践・使えるように情報を細かく分解してください\n・3000文字程度の特大レポートにして情報量を最大化してください",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        256
+      ],
+      "id": "1fb079f6-f776-4b68-9284-44e64f238723",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        368
+      ],
+      "id": "0da5e515-5399-4b97-b406-78c654189f19",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        368
+      ],
+      "id": "1497292f-22a9-45f7-a4eb-fe1ce3dbd96a",
+      "name": "Search in Tavily",
+      "credentials": {
+        "tavilyApi": {
+          "id": "QdN4xqGHqPPLe2fD",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "extract",
+        "urls": [
+          "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('urls0_URLs', ``, 'string') }}"
+        ],
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        64,
+        368
+      ],
+      "id": "42dbca7e-0026-463e-b92a-f943562bd4df",
+      "name": "Extract in Tavily",
+      "notesInFlow": false,
+      "credentials": {
+        "tavilyApi": {
+          "id": "QdN4xqGHqPPLe2fD",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $('AI Agent1').item.json.output.posts[0] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        192,
+        560
+      ],
+      "id": "853c8d03-f0fe-4404-bce9-c196b8912b1d",
+      "name": "Create Tweet",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "qubrecD0AYwsoPUp",
+          "name": "X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=あなたは優秀なライターであり、次々に人の感情を動かしてバズを生み出すSNSマーケターです。\n指定のテーマについて最新情報をまとめてXの投稿を作成してください\n\n# 手順\n1,最新のニュースを理解する\n2,最新の情報をもとに、具体的に実施したり理解できるマニュアルに落とし込む \n3,バズる投稿の型の要素をもとに文章を作成する。\n4,例文の文体を真似して、その人が書いたような文章にリライトする。ただし内容は変えてはいけません。\n\n# 注意事項\n・文字数は500～1000文字で作成してください\n・2024年以降の情報を使ってください\n・データは調査結果のみ使用して嘘はつかないでください\n・具体的な内容や詳細、ノウハウ、テクニックまで入れた文章にしてください。\n・読者に気づきを与える内容にしてください\n・リプでプレゼントはできないので、この投稿ですべて完結する情報にしてください\n・そのままXで投稿できるものを出力してください\n・ただの情報提供なので、プレゼントはありません。\n・バズる投稿の型をそのまま使わないで、要素分析して文章を生成してください。\n・絵文字は使わないでください\n\n# ニュース\n{{ $('AI Agent').item.json.output }}\n\n# 例文\n {{ $json.data.map(item => item.投稿).join(\",\") }}\n\n# 投稿の型\n{{ $('AI Agent2').item.json.output }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        560
+      ],
+      "id": "f5b31774-f8de-43d1-aca5-0b03f54e77f6",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        752
+      ],
+      "id": "27fd750e-9ed2-4598-bffb-becfab56cd29",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -544,
+        -272
+      ],
+      "id": "ece5e811-88ab-4fdf-8ea1-24e71ee8eebc",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twitterapi.io/twitter/tweet/advanced_search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "=from:{{ $json.userName }} since:{{ $json.lastWeek }} until:{{ $json.today }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "new1_d2026bb958e640d5b95e8f258db2bd4a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        -272
+      ],
+      "id": "e316dd5b-de89-46d2-b437-4fea5fe430a3",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y",
+          "mode": "list",
+          "cachedResultName": "n8n X 運用",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "シート1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "日時": "={{ $json.createdAt }}",
+            "投稿": "={{ $json.text }}",
+            "インプレッション": "={{ $json.viewCount }}",
+            "いいね": "={{ $json.likeCount }}",
+            "リツイート": "={{ $json.retweetCount }}",
+            "リプ": "={{ $json.replyCount }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "日時",
+              "displayName": "日時",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "投稿",
+              "displayName": "投稿",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "インプレッション",
+              "displayName": "インプレッション",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "いいね",
+              "displayName": "いいね",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "リツイート",
+              "displayName": "リツイート",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "リプ",
+              "displayName": "リプ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        -288
+      ],
+      "id": "0175f31d-5527-4a36-9dbc-c8b86964ec7c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "tweets",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -288
+      ],
+      "id": "5868b072-2672-47d5-8065-bba2d9a1caab",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7ef4186-7970-432c-8829-fd90a24283db",
+              "name": "tweets",
+              "value": "={{ $json.tweets.filter(item => !item.text.includes(\"@\")) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        -272
+      ],
+      "id": "3bb3ad2c-5484-4d2d-81db-38c5f2aaae60",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y",
+          "mode": "list",
+          "cachedResultName": "n8n X 運用",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "シート1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -384,
+        560
+      ],
+      "id": "e601ceee-19c1-4932-a81c-ce81733c7f21",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        560
+      ],
+      "id": "8168231e-2c3b-4ecc-8ba7-4fd6670aa261",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"posts\": \"ここに作成した投稿内容を入力します\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        736
+      ],
+      "id": "5449275f-31a2-4930-aacb-bc2b7997d1cc",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83103be0-9349-4c92-a999-fb5615c34bb7",
+              "leftValue": "={{ $json.tweets }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -272
+      ],
+      "id": "5b832b44-8ee6-47dc-a697-a11508ce66fd",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e91e1d76-fdd4-4002-96f8-d0793ef76697",
+              "name": "lastWeek",
+              "value": "={{ DateTime.now().minus({ days: 7 }).toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "29efe626-b63c-4653-97b0-08bbed8dd02b",
+              "name": "today",
+              "value": "={{ DateTime.now().toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "61ded325-500b-4407-891f-aa17234f7b0e",
+              "name": "userName",
+              "value": "ai_yorozuya",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        -272
+      ],
+      "id": "81b0a2ae-704d-4563-babc-32d0e0a9db35",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twitterapi.io/twitter/tweet/advanced_search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.search_word }} min_faves:{{ $json.min_faves }} since:{{ $json.since }} until:{{ $json.until }} "
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "new1_d2026bb958e640d5b95e8f258db2bd4a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -272,
+        -48
+      ],
+      "id": "8fee5b46-8fb8-4b3c-b187-7f912f16fd00",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7ef4186-7970-432c-8829-fd90a24283db",
+              "name": "tweets",
+              "value": "={{ $json.tweets.filter(item => !item.text.includes(\"@\")) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        -48
+      ],
+      "id": "67c13c04-2735-44b5-bd7d-b005bda68c10",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83103be0-9349-4c92-a999-fb5615c34bb7",
+              "leftValue": "={{ $json.tweets }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        48,
+        -48
+      ],
+      "id": "c807ee1b-dced-46f9-9988-be102766b3c4",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e91e1d76-fdd4-4002-96f8-d0793ef76697",
+              "name": "since",
+              "value": "={{ DateTime.now().minus({ days: 30 }).toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "29efe626-b63c-4653-97b0-08bbed8dd02b",
+              "name": "until",
+              "value": "={{ DateTime.now().toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "61ded325-500b-4407-891f-aa17234f7b0e",
+              "name": "min_faves",
+              "value": "150",
+              "type": "string"
+            },
+            {
+              "id": "258ff2bf-0236-47a0-91fd-08f983245f1f",
+              "name": "search_word",
+              "value": "AI SNS運用",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        -16
+      ],
+      "id": "e96f365b-de5d-4100-b038-85aa18917ac2",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=あなたは数多のバズを生み出すXのマーケター兼コピーライターです。\nバズっている投稿を添付するので、下記手順に沿ってバズる投稿の型を抽出してください。過去の自分の投稿の情報もGoogleSheetから取得して分析してください。\n\n## 手順\n1, バズっている投稿を一つひとつ文章の型を分析してください\n2, バズっている要素を抽出して、なぜバズっているのかを言語化してください\n3, その分析をもとにバズる投稿の型を作成してください。当てはめるだけでそのまま投稿できるような形式にしてください。\n\n## 出力\nバズる投稿の型のみ出力してください\n\n## バズっている投稿(カンマ区切りです)\n {{ $json.tweets.map(item => item.text).join(\",\") }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -64
+      ],
+      "id": "52f7a3c2-21ee-4bc2-b1a0-726ccefc96c3",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        64
+      ],
+      "id": "3563b837-d319-404a-927c-ce8709f843df",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "AnwFT8IvLHpDoASO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        576,
+        240
+      ],
+      "id": "739cfa36-5064-4297-9c26-47ade3fc08df",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y",
+          "mode": "list",
+          "cachedResultName": "n8n X 運用",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "シート1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YVht1nC15XcjQ6Oa8bb1l72G44a2w1yWsAoccLJyP6Y/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        64
+      ],
+      "id": "20fe2db9-0a1a-449a-9ea5-a63e07c65d1c",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk4eW0pH81iP4I5e",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 19
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -544,
+        -16
+      ],
+      "id": "e7e25783-aaf7-4a17-aa17-1f9c7cb462ac",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "content": "## Xの投稿取得→スプシに記載",
+        "height": 224,
+        "width": 1248
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        -352
+      ],
+      "typeVersion": 1,
+      "id": "7b0df06e-d0b3-44e0-950b-d97f7effc192",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Xのバズっている投稿を抽出して、型を作成",
+        "height": 320,
+        "width": 1248,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "67918284-f99d-4391-a8c5-3ddb270ef4b8",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 最新の情報を取得",
+        "height": 272,
+        "width": 1344,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "a82fe743-e1f1-4377-8879-ebefed6d96c1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 投稿作成→投稿",
+        "height": 368,
+        "width": 1264,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "49f08d75-0a63-4c93-b1c4-de45b8f7a3ef",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Create Tweet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Tweet": {
+      "main": [
+        []
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "14a8a994-1e58-46ba-9ba5-5f03d86068c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a646cec8ae4c0737bb8bfb799733077ead78f660c49d8e539490d251a994fb77"
+  },
+  "id": "YtOseEKQUey5BBKU",
+  "tags": []
+}
