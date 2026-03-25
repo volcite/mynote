@@ -66,22 +66,7 @@ LOG_FILE="/tmp/claude-${TMUX_NAME}-$$.log"
 # ─── ユーティリティ関数 ───
 json_success() {
   cat << EOF
-{
-  "status": "success",
-  "url": "$1",
-  "session_name": "${SESSION_NAME}",
-  "tmux_session": "${TMUX_NAME}",
-  "log_file": "${LOG_FILE}",
-  "commands": {
-    "attach": "tmux attach -t ${TMUX_NAME}",
-    "stop": "tmux kill-session -t ${TMUX_NAME}",
-    "logs": "cat ${LOG_FILE}"
-  }
-}
-
-=== Remote Control URL ===
 $1
-==========================
 EOF
 }
 
